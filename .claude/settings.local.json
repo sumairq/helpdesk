@@ -23,7 +23,9 @@
       "Bash(curl -s -i -b cookies.txt -X POST http://localhost:3001/api/auth/sign-out)",
       "Bash(curl -s -i -b cookies.txt -X POST http://localhost:3001/api/auth/sign-out -H \"Origin: http://localhost:5173\")",
       "Bash(kill %1)",
-      "Bash(pkill -f \"tsx watch\")"
+      "Bash(pkill -f \"tsx watch\")",
+      "PowerShell(Get-NetTCPConnection *)",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }

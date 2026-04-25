@@ -20,7 +20,12 @@ export const auth = betterAuth({
       },
     },
   },
-  trustedOrigins: ["http://localhost:5173"],
+  trustedOrigins: (request) => {
+    if (request) {
+      console.log("[auth] origin:", request.headers.get("origin"), "referer:", request.headers.get("referer"));
+    }
+    return ["http://localhost:5173", "http://localhost:3001"];
+  },
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
 });

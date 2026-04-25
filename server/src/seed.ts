@@ -2,6 +2,7 @@ import "dotenv/config";
 import { randomUUID } from "node:crypto";
 import { prisma } from "./db.js";
 import { auth } from "./auth.js";
+import { Role } from "./generated/prisma/enums.js";
 
 const email = process.env.SEED_ADMIN_EMAIL;
 const password = process.env.SEED_ADMIN_PASSWORD;
@@ -26,7 +27,7 @@ if (existing) {
       email,
       name: "Admin",
       emailVerified: true,
-      role: "ADMIN",
+      role: Role.ADMIN,
       accounts: {
         create: {
           id: randomUUID(),

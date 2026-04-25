@@ -25,7 +25,15 @@
       "Bash(kill %1)",
       "Bash(pkill -f \"tsx watch\")",
       "PowerShell(Get-NetTCPConnection *)",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "Bash(npx -y shadcn@latest init -t vite -b base -y --css-variables)",
+      "Bash(npx -y shadcn@latest init -t vite -b base -p nova -y --css-variables)",
+      "Bash(npx -y shadcn@latest add alert button card input label form sonner -y)",
+      "Bash(npx -y shadcn@latest add form -y)",
+      "Bash(npx -y shadcn@latest add form)",
+      "Bash(npx -y shadcn@latest add form --overwrite)",
+      "Bash(npx -y shadcn@latest view form)",
+      "Bash(npm ls *)"
     ]
   }
 }

@@ -12,7 +12,7 @@ export function AdminRoute() {
     return <Navigate to="/login" replace />;
   }
 
-  if ((session.user as { role?: string }).role !== "ADMIN") {
+  if (session.user.role !== "ADMIN") {
     return <Navigate to="/" replace />;
   }
 

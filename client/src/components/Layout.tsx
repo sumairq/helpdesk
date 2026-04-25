@@ -16,7 +16,7 @@ export function Layout() {
       <nav className="flex items-center justify-between border-b bg-card px-6 py-3">
         <div className="flex items-center gap-6">
           <strong>Helpdesk</strong>
-          {(session?.user as { role?: string } | undefined)?.role === "ADMIN" && (
+          {session?.user.role === "ADMIN" && (
             <Link to="/users" className="text-sm hover:underline">
               Users
             </Link>

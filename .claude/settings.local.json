@@ -34,7 +34,8 @@
       "Bash(npx -y shadcn@latest add form --overwrite)",
       "Bash(npx -y shadcn@latest view form)",
       "Bash(npm ls *)",
-      "Bash(npx tsx *)"
+      "Bash(npx tsx *)",
+      "Bash(npx tsc *)"
     ]
   }
 }

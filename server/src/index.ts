@@ -1,12 +1,15 @@
 import "dotenv/config";
 import express, { type Request, type Response } from "express";
 import cors from "cors";
+import { toNodeHandler } from "better-auth/node";
 import { prisma } from "./db.js";
+import { auth } from "./auth.js";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 3001);
 
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.all("/api/auth/*", toNodeHandler(auth));
 app.use(express.json());
 
 app.get("/api/health", async (_req: Request, res: Response) => {

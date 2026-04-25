@@ -1,7 +1,7 @@
 export function HomePage() {
   return (
-    <main style={{ padding: 32 }}>
-      <h1>Home</h1>
+    <main className="p-8">
+      <h1 className="text-2xl font-semibold">Home</h1>
     </main>
   );
 }

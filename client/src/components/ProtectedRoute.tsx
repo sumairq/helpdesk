@@ -5,7 +5,7 @@ export function ProtectedRoute() {
   const { data: session, isPending } = authClient.useSession();
 
   if (isPending) {
-    return <p style={{ fontFamily: "system-ui", padding: 32 }}>Loading…</p>;
+    return <p className="p-8 font-sans text-gray-700">Loading…</p>;
   }
 
   if (!session) {

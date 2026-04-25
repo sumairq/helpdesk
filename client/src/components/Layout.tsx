@@ -11,30 +11,14 @@ export function Layout() {
   };
 
   return (
-    <div style={{ fontFamily: "system-ui", minHeight: "100vh", background: "#f6f7f9" }}>
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "12px 24px",
-          background: "white",
-          borderBottom: "1px solid #e5e7eb",
-        }}
-      >
+    <div className="min-h-screen bg-gray-100 font-sans">
+      <nav className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3">
         <strong>Helpdesk</strong>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {session && <span style={{ fontSize: 14 }}>{session.user.name}</span>}
+        <div className="flex items-center gap-4">
+          {session && <span className="text-sm">{session.user.name}</span>}
           <button
             onClick={onSignOut}
-            style={{
-              padding: "6px 12px",
-              background: "#111827",
-              color: "white",
-              border: 0,
-              borderRadius: 4,
-              cursor: "pointer",
-            }}
+            className="cursor-pointer rounded bg-gray-900 px-3 py-1.5 text-white"
           >
             Sign out
           </button>

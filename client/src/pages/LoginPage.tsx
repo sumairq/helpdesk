@@ -1,87 +1,85 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { authClient } from "../auth-client";
+
+const loginSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Enter a valid email"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
-  const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSubmitting(true);
+  const onSubmit = handleSubmit(async ({ email, password }) => {
+    setFormError(null);
     const { error } = await authClient.signIn.email({ email, password });
-    setSubmitting(false);
     if (error) {
-      setError(error.message ?? "Sign in failed");
+      setFormError(error.message ?? "Sign in failed");
       return;
     }
     navigate("/", { replace: true });
-  };
+  });
+
+  const inputBase =
+    "rounded border px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-900/10";
 
   return (
-    <main
-      style={{
-        fontFamily: "system-ui",
-        minHeight: "100vh",
-        display: "grid",
-        placeItems: "center",
-        background: "#f6f7f9",
-      }}
-    >
+    <main className="grid min-h-screen place-items-center bg-gray-100 font-sans">
       <form
         onSubmit={onSubmit}
-        style={{
-          width: 360,
-          padding: 32,
-          background: "white",
-          borderRadius: 8,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-          display: "flex",
-          flexDirection: "column",
-          gap: 12,
-        }}
+        noValidate
+        className="flex w-[360px] flex-col gap-3 rounded-lg bg-white p-8 shadow-sm"
       >
-        <h1 style={{ margin: 0, fontSize: 22 }}>Sign in</h1>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 14 }}>
+        <h1 className="m-0 text-xl font-semibold">Sign in</h1>
+
+        <label className="flex flex-col gap-1 text-sm">
           Email
           <input
             type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
             autoComplete="email"
-            style={{ padding: 8, border: "1px solid #d0d3d9", borderRadius: 4 }}
+            {...register("email")}
+            className={`${inputBase} ${errors.email ? "border-red-700" : "border-gray-300"}`}
           />
+          {errors.email && (
+            <span className="text-xs text-red-700">{errors.email.message}</span>
+          )}
         </label>
-        <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 14 }}>
+
+        <label className="flex flex-col gap-1 text-sm">
           Password
           <input
             type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
             autoComplete="current-password"
-            style={{ padding: 8, border: "1px solid #d0d3d9", borderRadius: 4 }}
+            {...register("password")}
+            className={`${inputBase} ${errors.password ? "border-red-700" : "border-gray-300"}`}
           />
+          {errors.password && (
+            <span className="text-xs text-red-700">{errors.password.message}</span>
+          )}
         </label>
-        {error && <p style={{ color: "#b91c1c", margin: 0, fontSize: 14 }}>{error}</p>}
+
+        {formError && <p className="m-0 text-sm text-red-700">{formError}</p>}
+
         <button
           type="submit"
-          disabled={submitting}
-          style={{
-            padding: 10,
-            background: "#111827",
-            color: "white",
-            border: 0,
-            borderRadius: 4,
-            cursor: submitting ? "not-allowed" : "pointer",
-          }}
+          disabled={isSubmitting}
+          className="rounded bg-gray-900 px-3 py-2.5 text-white disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {submitting ? "Signing in…" : "Sign in"}
+          {isSubmitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </main>

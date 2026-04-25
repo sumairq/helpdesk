@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import { authClient } from "../auth-client";
 import { Button } from "@/components/ui/button";
 
@@ -14,7 +14,14 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <nav className="flex items-center justify-between border-b bg-card px-6 py-3">
-        <strong>Helpdesk</strong>
+        <div className="flex items-center gap-6">
+          <strong>Helpdesk</strong>
+          {(session?.user as { role?: string } | undefined)?.role === "ADMIN" && (
+            <Link to="/users" className="text-sm hover:underline">
+              Users
+            </Link>
+          )}
+        </div>
         <div className="flex items-center gap-4">
           {session && (
             <span className="text-sm text-muted-foreground">

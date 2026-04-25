@@ -44,6 +44,7 @@ helpdesk/
 **Better Auth** (`better-auth@^1.6.9`) with the Prisma adapter against PostgreSQL.
 
 **Server** (`server/src/auth.ts`):
+
 - Email + password enabled, **`disableSignUp: true`** — admin seeds the first user, agents are created by an admin (no public signup).
 - `additionalFields.role`: enum `[ADMIN, AGENT]` from the Prisma `Role` enum, `defaultValue: AGENT`, `input: false` (clients cannot set it).
 - `trustedOrigins` parsed from `TRUSTED_ORIGINS` env (comma-separated).
@@ -54,6 +55,23 @@ helpdesk/
 **Client** (`client/src/auth-client.ts`): `createAuthClient` from `better-auth/react`. No `baseURL` is set — requests go to relative `/api/auth/*` and Vite proxies `/api` → `:3001`. Use `authClient.signIn.email({ email, password })`, `authClient.signOut()`, and `authClient.useSession()`.
 
 **Forms:** because of the shadcn + Base UI integration (see below), wire RHF auth forms with `Controller`, not `register` spread, or Zod will see `undefined` and reject the submit before the API call.
+
+## Routing & access control
+
+`client/src/App.tsx` composes routes with two guards layered around `Layout`:
+
+- `ProtectedRoute` (`client/src/components/ProtectedRoute.tsx`) — redirects unauthenticated users to `/login`.
+- `AdminRoute` (`client/src/components/AdminRoute.tsx`) — nested inside `ProtectedRoute`; redirects non-admins to `/`.
+- `RedirectIfAuthed` wraps `/login` so signed-in users bounce to `/`.
+
+Routes:
+
+- `/login` — `LoginPage`. RHF + Zod via `Controller`. On success, calls `authClient.signIn.email` and `navigate("/", { replace: true })`. Surfaces server errors in an `Alert`.
+- `/` — `HomePage`, behind `ProtectedRoute` + `Layout`.
+- `/users` — `UsersPage`, behind `ProtectedRoute` → `AdminRoute` + `Layout`. Currently a heading-only placeholder for admin user management.
+- `*` — redirects to `/`.
+
+`Layout` (`client/src/components/Layout.tsx`) renders the top nav (brand, signed-in user name, sign-out button) and conditionally shows a "Users" link when `session?.user.role === "ADMIN"`. Client-side gating is for UX only — always enforce roles server-side on any future `/api/users` endpoints.
 
 ## Styling: Tailwind v4
 

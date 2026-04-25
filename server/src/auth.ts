@@ -4,11 +4,19 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./db.js";
 import { Role } from "./generated/prisma/enums.js";
 
+const secret = process.env.BETTER_AUTH_SECRET;
+if (!secret || secret.length < 32) {
+  throw new Error(
+    "BETTER_AUTH_SECRET must be set to a string of at least 32 characters",
+  );
+}
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: {
     enabled: true,
     disableSignUp: true,
+    minPasswordLength: 12,
   },
   user: {
     additionalFields: {
@@ -24,6 +32,14 @@ export const auth = betterAuth({
     .split(",")
     .map((o) => o.trim())
     .filter(Boolean),
-  secret: process.env.BETTER_AUTH_SECRET,
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 5 },
+    },
+  },
+  secret,
   baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3001",
 });

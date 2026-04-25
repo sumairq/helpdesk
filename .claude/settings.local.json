@@ -35,7 +35,8 @@
       "Bash(npx -y shadcn@latest view form)",
       "Bash(npm ls *)",
       "Bash(npx tsx *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(git check-ignore *)"
     ]
   }
 }

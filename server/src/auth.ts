@@ -33,7 +33,7 @@ export const auth = betterAuth({
     .map((o) => o.trim())
     .filter(Boolean),
   rateLimit: {
-    enabled: true,
+    enabled: process.env.NODE_ENV !== "test",
     window: 60,
     max: 100,
     customRules: {

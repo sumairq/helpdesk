@@ -107,33 +107,20 @@ When working with any library, framework, SDK, or CLI in this project (Express, 
 
 Use it even for libraries you "know" — versions drift, APIs change. Skip it only for general programming concepts, refactoring, or business-logic debugging.
 
-## Testing: Playwright
+## Testing
 
-E2E tests live at the repo root in `e2e/` and run against a **separate test database** (`helpdesk_test`) via `server/.env.test` (gitignored; copy from `server/.env.test.example`).
+E2E tests use Playwright and live in `e2e/` against a separate `helpdesk_test` database.
 
-- `playwright.config.ts` (root) defines a Chromium project and a `webServer` array that spawns the test server (`npm run start:test --workspace server`) and the Vite client. `baseURL` is `http://localhost:5173`. `testMatch` is restricted to `*.spec.ts` so the setup/teardown files aren't picked up as tests.
-- The test server uses `dotenv-cli` to load `server/.env.test`, so it points Prisma at the test DB without touching `.env`.
-- The test server runs on the **same port (3001) as dev** — stop `npm run dev:server` before running e2e, or override `PORT` in `.env.test`.
+**Always delegate E2E test work to the `playwright-e2e-writer` agent.** That agent owns the testing infrastructure, conventions, locator strategy, fixtures, and project-specific setup details (test DB lifecycle, auth seeding, role gates, dev ports). Don't write Playwright specs, edit `playwright.config.ts`, or modify the global setup/teardown directly — invoke the agent instead.
 
-**Global setup/teardown:**
+Invoke it via the Agent tool with `subagent_type: "playwright-e2e-writer"` whenever the user:
 
-- `e2e/global-setup.ts` runs `npm run db:reset:test --workspace server` (which is `prisma migrate reset --force` — drops the schema, re-applies every migration in `server/prisma/migrations/`), then `npm run seed:test --workspace server` to create the admin from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`. Every `npm run test:e2e` starts from a fully migrated, freshly seeded DB.
-- Prisma 7 blocks `migrate reset` when invoked by an AI agent; `global-setup.ts` sets `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=yes` in the spawned environment to bypass the guard. **This is safe only because `db:reset:test` is hard-wired to `dotenv -e .env.test`** — it can never touch the dev DB. Never copy this env var into any other script that could run against `.env`.
-- `e2e/global-teardown.ts` is a stub — expand it if you add shared resources that need cleanup.
-- `server/src/reset.ts` (and the `reset:test` script) is a manual truncate+seed helper kept around for one-off use; it's no longer on the e2e path.
+- Asks to write, extend, or refactor E2E tests
+- Adds a new feature, page, or API surface that warrants E2E coverage (proactively suggest the agent)
+- Reports a flaky test or wants to debug failing Playwright runs
+- Asks to change Playwright config, fixtures, page objects, or the test DB setup
 
-**TypeScript scope:**
-
-- `e2e/tsconfig.json` covers `e2e/**/*.ts` and `playwright.config.ts`, with `types: ["node", "@playwright/test"]`. `@types/node` is installed at the root workspace so node globals (`process`, `node:child_process`) resolve in the IDE.
-
-Scripts:
-
-- `npm run test:e2e` — run Playwright tests
-- `npm run test:e2e:ui` — Playwright UI mode
-- `npm run test:e2e:setup` — `prisma db push` + `seed` against the test DB (legacy first-time helper; ongoing resets are handled by `global-setup.ts`)
-- Server-scoped helpers: `start:test`, `db:migrate:test`, `db:push:test`, `db:reset:test`, `seed:test`, `reset:test` — all run via `dotenv -e .env.test --` so the test DB is used regardless of which `.env` is present.
-
-First-time setup: create the `helpdesk_test` Postgres database, copy `.env.test.example` → `.env.test` and fill in DB password + a fresh 32-char `BETTER_AUTH_SECRET`, then `npm run test:e2e` (global-setup will run migrations and seed automatically).
+Brief the agent with: which flow(s) to cover, whether auth is required, any seeded data assumptions, and how to run/verify the tests. The agent will read the current code and existing tests itself — don't paste large code excerpts in the prompt.
 
 ## Out of scope (v1)
 

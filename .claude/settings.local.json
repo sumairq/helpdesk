@@ -37,7 +37,13 @@
       "Bash(npx tsx *)",
       "Bash(npx tsc *)",
       "Bash(git check-ignore *)",
-      "Bash(npx playwright *)"
+      "Bash(npx playwright *)",
+      "Bash(curl -s -X POST http://localhost:3001/api/auth/sign-in/email -H \"Content-Type: application/json\" -H \"Origin: http://localhost:5173\" -d '{\"email\":\"admin@helpdesk.test\",\"password\":\"testing123456\"}' -i)",
+      "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=yes npx dotenv -e .env.test -- npx prisma migrate reset --force)",
+      "Bash(npx dotenv *)",
+      "Bash(netstat -ano -p tcp)",
+      "Bash(taskkill *)",
+      "Bash(awk '{print $5}')"
     ]
   }
 }

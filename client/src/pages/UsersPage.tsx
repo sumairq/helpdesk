@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 
 interface User {
   id: string;
@@ -14,14 +15,11 @@ export function UsersPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/users", { credentials: "include" })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to load users");
-        const data = await res.json();
-        setUsers(data.users);
-      })
+    axios
+      .get<{ users: User[] }>("/api/users", { withCredentials: true })
+      .then((res) => setUsers(res.data.users))
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "Failed to load users");
+        setError(axios.isAxiosError(err) ? (err.response?.data?.error ?? err.message) : "Failed to load users");
       })
       .finally(() => setLoading(false));
   }, []);

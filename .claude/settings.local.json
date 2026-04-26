@@ -43,7 +43,8 @@
       "Bash(npx dotenv *)",
       "Bash(netstat -ano -p tcp)",
       "Bash(taskkill *)",
-      "Bash(awk '{print $5}')"
+      "Bash(awk '{print $5}')",
+      "Bash(powershell *)"
     ]
   }
 }

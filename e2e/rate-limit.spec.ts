@@ -19,8 +19,12 @@
  * Mode: serial — route intercepts are per-page and stateful. Serial prevents
  *   a parallel worker from interfering with the mock state.
  */
-import { test, expect } from "@playwright/test";
-import { SEED_ADMIN_EMAIL } from "./helpers/env.js";
+import {
+  test,
+  expect,
+  fillLoginForm,
+  SEED_ADMIN_EMAIL,
+} from "./fixtures/auth.js";
 
 test.describe.configure({ mode: "serial" });
 
@@ -47,8 +51,7 @@ test.describe("Rate limiting on /sign-in/email", () => {
       });
 
       await page.goto("/login");
-      await page.getByLabel("Email").fill(SEED_ADMIN_EMAIL);
-      await page.getByLabel("Password").fill("anypassword123!");
+      await fillLoginForm(page, SEED_ADMIN_EMAIL, "anypassword123!");
       await page.getByRole("button", { name: "Sign in" }).click();
 
       // The LoginPage surfaces any auth error in the destructive Alert
@@ -78,8 +81,7 @@ test.describe("Rate limiting on /sign-in/email", () => {
       });
 
       await page.goto("/login");
-      await page.getByLabel("Email").fill(SEED_ADMIN_EMAIL);
-      await page.getByLabel("Password").fill("anypassword123!");
+      await fillLoginForm(page, SEED_ADMIN_EMAIL, "anypassword123!");
       await page.getByRole("button", { name: "Sign in" }).click();
 
       // Error is shown
@@ -114,8 +116,7 @@ test.describe("Rate limiting on /sign-in/email", () => {
       });
 
       await page.goto("/login");
-      await page.getByLabel("Email").fill(SEED_ADMIN_EMAIL);
-      await page.getByLabel("Password").fill("anypassword123!");
+      await fillLoginForm(page, SEED_ADMIN_EMAIL, "anypassword123!");
       await page.getByRole("button", { name: "Sign in" }).click();
 
       // The exact server message should appear inside the destructive Alert

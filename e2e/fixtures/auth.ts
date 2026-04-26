@@ -1,28 +1,51 @@
 /**
- * Custom Playwright fixtures that provide pre-authenticated pages.
+ * Auth helpers + fixtures.
  *
- * - `adminPage`  — a Page already authenticated as the seeded admin
- * - `agentPage`  — a Page already authenticated as a seeded AGENT user
+ * Helpers (use in any spec):
+ *   - login(page, email, password) — UI sign-in, asserts redirect to /
+ *   - loginAsAdmin(page)           — sign in as the seeded admin
+ *   - loginAsAgent(page)           — seed (idempotent) + sign in as the AGENT
+ *   - signOut(page)                — click "Sign out" in the nav
+ *   - fillLoginForm(page, ...)     — fill the form without submitting
  *
- * Authentication is done via direct API call (no UI login per test) so that
- * test suites that need a logged-in context start immediately at the target
- * page rather than repeating the login flow.
- *
- * The storageState is built per-fixture invocation (not cached globally) so
- * each test gets fresh cookies and tests remain fully independent.
+ * Fixtures (extend the base test):
+ *   - adminPage — a Page already authenticated as the seeded admin
+ *   - agentPage — a Page already authenticated as the seeded AGENT
  */
 import { test as base, expect, type Page } from "@playwright/test";
 import { SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD } from "../helpers/env.js";
 import { seedAgentUser, AGENT_EMAIL, AGENT_PASSWORD } from "../helpers/seed-agent.js";
 
-export { AGENT_EMAIL, AGENT_PASSWORD };
+export { AGENT_EMAIL, AGENT_PASSWORD, SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD };
 
-async function uiSignIn(page: Page, email: string, password: string) {
-  await page.goto("/login");
+export async function fillLoginForm(
+  page: Page,
+  email: string,
+  password: string,
+) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
+}
+
+export async function login(page: Page, email: string, password: string) {
+  await page.goto("/login");
+  await fillLoginForm(page, email, password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL("/");
+}
+
+export async function loginAsAdmin(page: Page) {
+  await login(page, SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD);
+}
+
+export async function loginAsAgent(page: Page) {
+  await seedAgentUser();
+  await login(page, AGENT_EMAIL, AGENT_PASSWORD);
+}
+
+export async function signOut(page: Page) {
+  await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(page).toHaveURL(/\/login$/);
 }
 
 type AuthFixtures = {
@@ -34,16 +57,15 @@ export const test = base.extend<AuthFixtures>({
   adminPage: async ({ browser }, use) => {
     const context = await browser.newContext();
     const page = await context.newPage();
-    await uiSignIn(page, SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD);
+    await loginAsAdmin(page);
     await use(page);
     await context.close();
   },
 
   agentPage: async ({ browser }, use) => {
-    await seedAgentUser();
     const context = await browser.newContext();
     const page = await context.newPage();
-    await uiSignIn(page, AGENT_EMAIL, AGENT_PASSWORD);
+    await loginAsAgent(page);
     await use(page);
     await context.close();
   },

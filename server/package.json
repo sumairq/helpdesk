@@ -10,8 +10,10 @@
     "seed": "tsx src/seed.ts",
     "start:test": "dotenv -e .env.test -- tsx src/index.ts",
     "db:migrate:test": "dotenv -e .env.test -- prisma migrate deploy",
+    "db:reset:test": "dotenv -e .env.test -- prisma migrate reset --force",
     "db:push:test": "dotenv -e .env.test -- prisma db push",
-    "seed:test": "dotenv -e .env.test -- tsx src/seed.ts"
+    "seed:test": "dotenv -e .env.test -- tsx src/seed.ts",
+    "reset:test": "dotenv -e .env.test -- tsx src/reset.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

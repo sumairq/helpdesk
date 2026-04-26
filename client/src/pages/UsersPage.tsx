@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
 interface User {
   id: string;
@@ -9,32 +9,27 @@ interface User {
   createdAt: string;
 }
 
-export function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+async function fetchUsers(): Promise<User[]> {
+  const res = await axios.get<{ users: User[] }>("/api/users", { withCredentials: true });
+  return res.data.users;
+}
 
-  useEffect(() => {
-    axios
-      .get<{ users: User[] }>("/api/users", { withCredentials: true })
-      .then((res) => setUsers(res.data.users))
-      .catch((err: unknown) => {
-        setError(axios.isAxiosError(err) ? (err.response?.data?.error ?? err.message) : "Failed to load users");
-      })
-      .finally(() => setLoading(false));
-  }, []);
+export function UsersPage() {
+  const { data: users = [], isPending, error } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
 
   return (
     <main className="p-8">
       <h1 className="text-2xl font-semibold mb-6">Users</h1>
 
-      {loading && <p className="text-muted-foreground">Loading...</p>}
+      {isPending && <p className="text-muted-foreground">Loading...</p>}
 
       {error && (
-        <p className="text-destructive">{error}</p>
+        <p className="text-destructive">
+          {axios.isAxiosError(error) ? (error.response?.data?.error ?? error.message) : "Failed to load users"}
+        </p>
       )}
 
-      {!loading && !error && (
+      {!isPending && !error && (
         <div className="rounded-md border">
           <table className="w-full text-sm">
             <thead>

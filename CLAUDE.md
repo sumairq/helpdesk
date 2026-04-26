@@ -10,6 +10,8 @@ AI-powered ticket management system for student support. See `project-scope.md`,
 - **Auth:** Better Auth with the Prisma adapter (PostgreSQL), email + password
 - **AI:** Claude API via `@anthropic-ai/sdk`, with prompt caching on the system prompt + knowledgebase
 - **Package manager:** npm workspaces (root `package.json` defines `client` and `server`)
+- **HTTP client:** `axios` — use for all API calls in the client; prefer `axios.isAxiosError` for error handling
+- **Server state:** `@tanstack/react-query` — use `useQuery` / `useMutation` for all data fetching; `QueryClientProvider` is mounted in `main.tsx`
 
 ## Layout
 

@@ -36,7 +36,8 @@
       "Bash(npm ls *)",
       "Bash(npx tsx *)",
       "Bash(npx tsc *)",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(npx playwright *)"
     ]
   }
 }

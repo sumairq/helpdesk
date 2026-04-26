@@ -48,7 +48,12 @@ helpdesk/
 - Email + password enabled, **`disableSignUp: true`** — admin seeds the first user, agents are created by an admin (no public signup).
 - `additionalFields.role`: enum `[ADMIN, AGENT]` from the Prisma `Role` enum, `defaultValue: AGENT`, `input: false` (clients cannot set it).
 - `trustedOrigins` parsed from `TRUSTED_ORIGINS` env (comma-separated).
+- `BETTER_AUTH_SECRET` is validated at module load — must be ≥32 chars or the server throws before `betterAuth()` runs.
+- `minPasswordLength: 12`.
+- Rate limiting enabled (`window: 60`, `max: 100`) with a tighter rule on `/sign-in/email` (`max: 5`/min).
 - Required env: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` (defaults to `http://localhost:3001`), `TRUSTED_ORIGINS`.
+
+**Authorization middleware** (`server/src/middleware/auth.ts`): exports `requireAuth` and `requireAdmin`. Both call `auth.api.getSession({ headers: fromNodeHeaders(req.headers) })` and stash the session on `res.locals.session`. `requireAdmin` 401s if unauthenticated, 403s if `session.user.role !== "ADMIN"`. **Apply `requireAdmin` to every admin-only API route** (e.g. anything under `/api/users`) — the client-side `AdminRoute` guard is UX only.
 
 **Express mount** (`server/src/index.ts`): `app.all("/api/auth/*", toNodeHandler(auth))` is registered **before** `app.use(express.json())`. Do not move this — Better Auth needs the raw body. CORS is configured with `credentials: true` and `origin: http://localhost:5173`.
 
@@ -101,6 +106,23 @@ When working with any library, framework, SDK, or CLI in this project (Express, 
 2. `mcp__context7__query-docs` to fetch the relevant docs
 
 Use it even for libraries you "know" — versions drift, APIs change. Skip it only for general programming concepts, refactoring, or business-logic debugging.
+
+## Testing: Playwright
+
+E2E tests live at the repo root in `e2e/` and run against a **separate test database** (`helpdesk_test`) via `server/.env.test` (gitignored; copy from `server/.env.test.example`).
+
+- `playwright.config.ts` (root) defines a Chromium project and a `webServer` array that spawns the test server (`npm run start:test --workspace server`) and the Vite client. `baseURL` is `http://localhost:5173`.
+- The test server uses `dotenv-cli` to load `server/.env.test`, so it points Prisma at the test DB without touching `.env`.
+- The test server runs on the **same port (3001) as dev** — stop `npm run dev:server` before running e2e, or override `PORT` in `.env.test`.
+
+Scripts:
+
+- `npm run test:e2e` — run Playwright tests
+- `npm run test:e2e:ui` — Playwright UI mode
+- `npm run test:e2e:setup` — `prisma db push` + `seed` against the test DB
+- Server-scoped helpers: `start:test`, `db:migrate:test`, `db:push:test`, `seed:test` — all run via `dotenv -e .env.test --` so the test DB is used regardless of which `.env` is present.
+
+First-time setup: create the `helpdesk_test` Postgres database, copy `.env.test.example` → `.env.test` and fill in DB password + a fresh 32-char `BETTER_AUTH_SECRET`, then `npm run test:e2e:setup`.
 
 ## Out of scope (v1)
 

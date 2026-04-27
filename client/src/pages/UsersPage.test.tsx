@@ -8,6 +8,7 @@ import { renderWithQuery } from "@/test/utils";
 vi.mock("axios");
 const mockedAxios = vi.mocked(axios, true);
 
+// Prevent Base UI portal/animation issues in jsdom.
 vi.mock("@/components/ui/dialog", () => ({
   Dialog: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
     open ? <div>{children}</div> : null,
@@ -16,6 +17,35 @@ vi.mock("@/components/ui/dialog", () => ({
   DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
   DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
+
+// Wrap the real CreateUserDialog with dismiss simulation so that both the form
+// tests (which need real inputs) and the open/close tests work in one file.
+vi.mock("@/components/CreateUserDialog", async (importOriginal) => {
+  const { useEffect } = await import("react");
+  const mod = await importOriginal<typeof import("@/components/CreateUserDialog")>();
+  const Real = mod.CreateUserDialog;
+  return {
+    CreateUserDialog: (props: { open: boolean; onOpenChange: (open: boolean) => void }) => {
+      useEffect(() => {
+        if (!props.open) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+          if (e.key === "Escape") props.onOpenChange(false);
+        };
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+      }, [props.open, props.onOpenChange]);
+
+      return (
+        <>
+          <Real {...props} />
+          {props.open && (
+            <div data-testid="backdrop" onClick={() => props.onOpenChange(false)} />
+          )}
+        </>
+      );
+    },
+  };
+});
 
 const mockUsers = [
   {
@@ -36,11 +66,11 @@ const mockUsers = [
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockedAxios.get.mockResolvedValue({ data: { users: [] } });
 });
 
 describe("UsersPage", () => {
   it("renders the page heading", () => {
-    mockedAxios.get.mockResolvedValue({ data: { users: [] } });
     renderWithQuery(<UsersPage />);
     expect(screen.getByRole("heading", { name: "Users" })).toBeInTheDocument();
   });
@@ -73,7 +103,6 @@ describe("UsersPage", () => {
   });
 
   it("shows 'No users found' when the list is empty", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { users: [] } });
     renderWithQuery(<UsersPage />);
     await waitFor(() => {
       expect(screen.getByText("No users found.")).toBeInTheDocument();
@@ -107,16 +136,19 @@ describe("UsersPage", () => {
   });
 
   it("renders the New User button", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { users: [] } });
     renderWithQuery(<UsersPage />);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "New User" })).toBeInTheDocument();
     });
   });
 
-  it("opens the create user dialog when New User is clicked", async () => {
+  it("dialog is not shown on initial render", () => {
+    renderWithQuery(<UsersPage />);
+    expect(screen.queryByRole("heading", { name: "New User" })).not.toBeInTheDocument();
+  });
+
+  it("shows the dialog when New User is clicked", async () => {
     const user = userEvent.setup();
-    mockedAxios.get.mockResolvedValue({ data: { users: [] } });
     renderWithQuery(<UsersPage />);
     await waitFor(() => screen.getByRole("button", { name: "New User" }));
     await user.click(screen.getByRole("button", { name: "New User" }));
@@ -126,9 +158,28 @@ describe("UsersPage", () => {
     expect(screen.getByLabelText("Password")).toBeInTheDocument();
   });
 
+  it("hides the dialog when clicking outside", async () => {
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await waitFor(() => screen.getByRole("button", { name: "New User" }));
+    await user.click(screen.getByRole("button", { name: "New User" }));
+    expect(screen.getByRole("heading", { name: "New User" })).toBeInTheDocument();
+    await user.click(screen.getByTestId("backdrop"));
+    expect(screen.queryByRole("heading", { name: "New User" })).not.toBeInTheDocument();
+  });
+
+  it("hides the dialog when Escape is pressed", async () => {
+    const user = userEvent.setup();
+    renderWithQuery(<UsersPage />);
+    await waitFor(() => screen.getByRole("button", { name: "New User" }));
+    await user.click(screen.getByRole("button", { name: "New User" }));
+    expect(screen.getByRole("heading", { name: "New User" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("heading", { name: "New User" })).not.toBeInTheDocument();
+  });
+
   it("shows validation errors when submitting an empty form", async () => {
     const user = userEvent.setup();
-    mockedAxios.get.mockResolvedValue({ data: { users: [] } });
     renderWithQuery(<UsersPage />);
     await waitFor(() => screen.getByRole("button", { name: "New User" }));
     await user.click(screen.getByRole("button", { name: "New User" }));
@@ -164,7 +215,6 @@ describe("UsersPage", () => {
 
   it("displays a server error inside the modal when creation fails", async () => {
     const user = userEvent.setup();
-    mockedAxios.get.mockResolvedValue({ data: { users: [] } });
     const err = Object.assign(new Error("Email already in use"), {
       isAxiosError: true,
       response: { data: { error: "Email already in use" } },

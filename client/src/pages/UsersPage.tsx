@@ -1,6 +1,9 @@
+import { useState } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { CreateUserDialog } from "@/components/CreateUserDialog";
+import { UsersTable } from "@/components/UsersTable";
 
 interface User {
   id: string;
@@ -16,36 +19,17 @@ async function fetchUsers(): Promise<User[]> {
 }
 
 export function UsersPage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { data: users = [], isPending, error } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
 
   return (
     <main className="p-8">
-      <h1 className="text-2xl font-semibold mb-6">Users</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-semibold">Users</h1>
+        <Button onClick={() => setDialogOpen(true)}>New User</Button>
+      </div>
 
-      {isPending && (
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left font-medium">Name</th>
-                <th className="px-4 py-3 text-left font-medium">Email</th>
-                <th className="px-4 py-3 text-left font-medium">Role</th>
-                <th className="px-4 py-3 text-left font-medium">Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b last:border-0">
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-48" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-5 w-14 rounded-full" /></td>
-                  <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <CreateUserDialog open={dialogOpen} onOpenChange={setDialogOpen} />
 
       {error && (
         <p className="text-destructive">
@@ -53,50 +37,7 @@ export function UsersPage() {
         </p>
       )}
 
-      {!isPending && !error && (
-        <div className="rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="px-4 py-3 text-left font-medium">Name</th>
-                <th className="px-4 py-3 text-left font-medium">Email</th>
-                <th className="px-4 py-3 text-left font-medium">Role</th>
-                <th className="px-4 py-3 text-left font-medium">Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
-                    No users found.
-                  </td>
-                </tr>
-              ) : (
-                users.map((user) => (
-                  <tr key={user.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="px-4 py-3">{user.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={
-                          user.role === "ADMIN"
-                            ? "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary"
-                            : "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground"
-                        }
-                      >
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {!error && <UsersTable users={users} isPending={isPending} />}
     </main>
   );
 }

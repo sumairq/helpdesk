@@ -1,11 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import axios from "axios";
 import { UsersPage } from "./UsersPage";
 import { renderWithQuery } from "@/test/utils";
 
 vi.mock("axios");
 const mockedAxios = vi.mocked(axios, true);
+
+vi.mock("@/components/ui/dialog", () => ({
+  Dialog: ({ open, children }: { open: boolean; children: React.ReactNode }) =>
+    open ? <div>{children}</div> : null,
+  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+  DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
 
 const mockUsers = [
   {
@@ -93,6 +103,84 @@ describe("UsersPage", () => {
     renderWithQuery(<UsersPage />);
     await waitFor(() => {
       expect(screen.getByText("Network Error")).toBeInTheDocument();
+    });
+  });
+
+  it("renders the New User button", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users: [] } });
+    renderWithQuery(<UsersPage />);
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "New User" })).toBeInTheDocument();
+    });
+  });
+
+  it("opens the create user dialog when New User is clicked", async () => {
+    const user = userEvent.setup();
+    mockedAxios.get.mockResolvedValue({ data: { users: [] } });
+    renderWithQuery(<UsersPage />);
+    await waitFor(() => screen.getByRole("button", { name: "New User" }));
+    await user.click(screen.getByRole("button", { name: "New User" }));
+    expect(screen.getByRole("heading", { name: "New User" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Email")).toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+  });
+
+  it("shows validation errors when submitting an empty form", async () => {
+    const user = userEvent.setup();
+    mockedAxios.get.mockResolvedValue({ data: { users: [] } });
+    renderWithQuery(<UsersPage />);
+    await waitFor(() => screen.getByRole("button", { name: "New User" }));
+    await user.click(screen.getByRole("button", { name: "New User" }));
+    await user.click(screen.getByRole("button", { name: "Create User" }));
+    await waitFor(() => {
+      expect(screen.getByText("Name must be at least 3 characters")).toBeInTheDocument();
+      expect(screen.getByText("Email is required")).toBeInTheDocument();
+      expect(screen.getByText("Password must be at least 8 characters")).toBeInTheDocument();
+    });
+  });
+
+  it("creates a user, closes the modal, and refetches on success", async () => {
+    const user = userEvent.setup();
+    mockedAxios.get.mockResolvedValue({ data: { users: mockUsers } });
+    mockedAxios.post.mockResolvedValue({ data: {} });
+    renderWithQuery(<UsersPage />);
+    await waitFor(() => screen.getByRole("button", { name: "New User" }));
+    await user.click(screen.getByRole("button", { name: "New User" }));
+    await user.type(screen.getByLabelText("Name"), "Carol Agent");
+    await user.type(screen.getByLabelText("Email"), "carol@helpdesk.local");
+    await user.type(screen.getByLabelText("Password"), "supersecret123");
+    await user.click(screen.getByRole("button", { name: "Create User" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("heading", { name: "New User" })).not.toBeInTheDocument();
+    });
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      "/api/users",
+      { name: "Carol Agent", email: "carol@helpdesk.local", password: "supersecret123" },
+      { withCredentials: true },
+    );
+    expect(mockedAxios.get).toHaveBeenCalledTimes(2);
+  });
+
+  it("displays a server error inside the modal when creation fails", async () => {
+    const user = userEvent.setup();
+    mockedAxios.get.mockResolvedValue({ data: { users: [] } });
+    const err = Object.assign(new Error("Email already in use"), {
+      isAxiosError: true,
+      response: { data: { error: "Email already in use" } },
+    });
+    mockedAxios.post.mockRejectedValue(err);
+    mockedAxios.isAxiosError.mockReturnValue(true);
+    renderWithQuery(<UsersPage />);
+    await waitFor(() => screen.getByRole("button", { name: "New User" }));
+    await user.click(screen.getByRole("button", { name: "New User" }));
+    await user.type(screen.getByLabelText("Name"), "Carol Agent");
+    await user.type(screen.getByLabelText("Email"), "carol@helpdesk.local");
+    await user.type(screen.getByLabelText("Password"), "supersecret123");
+    await user.click(screen.getByRole("button", { name: "Create User" }));
+    await waitFor(() => {
+      expect(screen.getByText("Email already in use")).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "New User" })).toBeInTheDocument();
     });
   });
 });

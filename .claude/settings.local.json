@@ -45,7 +45,10 @@
       "Bash(taskkill *)",
       "Bash(awk '{print $5}')",
       "Bash(powershell *)",
-      "Bash(npx shadcn@latest add skeleton)"
+      "Bash(npx shadcn@latest add skeleton)",
+      "Bash(npx shadcn@latest add dialog --yes)",
+      "Read(//tmp/**)",
+      "Bash(npx shadcn@latest add table --yes)"
     ]
   }
 }

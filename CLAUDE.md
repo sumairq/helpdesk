@@ -109,7 +109,26 @@ When working with any library, framework, SDK, or CLI in this project (Express, 
 
 Use it even for libraries you "know" — versions drift, APIs change. Skip it only for general programming concepts, refactoring, or business-logic debugging.
 
-## Testing
+## Component tests
+
+Component tests use **Vitest** + **React Testing Library** and live alongside their source files as `*.test.tsx`.
+
+**Run:**
+- `npm run test --workspace=client` — single run
+- `npm run test:watch --workspace=client` — watch mode
+
+**Setup:**
+- Vitest is configured in `client/vite.config.ts` (`environment: "jsdom"`, `globals: true`)
+- `@testing-library/jest-dom` matchers are imported in `client/src/test/setup.ts`
+- `renderWithQuery` helper (wraps the component in `QueryClientProvider` with `retry: false`) lives in `client/src/test/utils.tsx` — import it instead of writing a local wrapper
+
+**Conventions:**
+- Mock `axios` with `vi.mock("axios")` and type it with `vi.mocked(axios, true)`; use `mockedAxios.isAxiosError.mockReturnValue(true)` when testing error paths
+- Always set `retry: false` on the `QueryClient` in tests — otherwise React Query retries failed queries and the test hangs
+- Call `vi.clearAllMocks()` in `beforeEach`
+- Test the pending (skeleton), success, empty, and error states for every page that fetches data
+
+## E2E tests
 
 E2E tests use Playwright and live in `e2e/` against a separate `helpdesk_test` database.
 

@@ -79,7 +79,7 @@ describe("UsersPage", () => {
     mockedAxios.get.mockReturnValue(new Promise(() => {}));
     renderWithQuery(<UsersPage />);
     const skeletons = document.querySelectorAll("[data-slot='skeleton']");
-    expect(skeletons.length).toBe(20); // 5 rows × 4 columns
+    expect(skeletons.length).toBe(25); // 5 rows × 5 columns
   });
 
   it("renders a row for each user after loading", async () => {

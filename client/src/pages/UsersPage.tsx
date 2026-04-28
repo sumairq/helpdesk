@@ -3,15 +3,8 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { CreateUserDialog } from "@/components/CreateUserDialog";
-import { UsersTable } from "@/components/UsersTable";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "ADMIN" | "AGENT";
-  createdAt: string;
-}
+import { EditUserDialog } from "@/components/EditUserDialog";
+import { UsersTable, type User } from "@/components/UsersTable";
 
 async function fetchUsers(): Promise<User[]> {
   const res = await axios.get<{ users: User[] }>("/api/users", { withCredentials: true });
@@ -19,17 +12,19 @@ async function fetchUsers(): Promise<User[]> {
 }
 
 export function UsersPage() {
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const { data: users = [], isPending, error } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
 
   return (
     <main className="p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Users</h1>
-        <Button onClick={() => setDialogOpen(true)}>New User</Button>
+        <Button onClick={() => setCreateOpen(true)}>New User</Button>
       </div>
 
-      <CreateUserDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <EditUserDialog user={editingUser} onClose={() => setEditingUser(null)} />
 
       {error && (
         <p className="text-destructive">
@@ -37,7 +32,9 @@ export function UsersPage() {
         </p>
       )}
 
-      {!error && <UsersTable users={users} isPending={isPending} />}
+      {!error && (
+        <UsersTable users={users} isPending={isPending} onEdit={setEditingUser} />
+      )}
     </main>
   );
 }

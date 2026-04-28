@@ -1,4 +1,6 @@
+import { PencilIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -8,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface User {
+export interface User {
   id: string;
   name: string;
   email: string;
@@ -19,9 +21,10 @@ interface User {
 interface UsersTableProps {
   users: User[];
   isPending: boolean;
+  onEdit: (user: User) => void;
 }
 
-export function UsersTable({ users, isPending }: UsersTableProps) {
+export function UsersTable({ users, isPending, onEdit }: UsersTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -31,6 +34,7 @@ export function UsersTable({ users, isPending }: UsersTableProps) {
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Joined</TableHead>
+            <TableHead />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -41,11 +45,12 @@ export function UsersTable({ users, isPending }: UsersTableProps) {
                 <TableCell><Skeleton className="h-4 w-48" /></TableCell>
                 <TableCell><Skeleton className="h-5 w-14 rounded-full" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                <TableCell><Skeleton className="h-7 w-7 rounded-md" /></TableCell>
               </TableRow>
             ))
           ) : users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="py-6 text-center text-muted-foreground">
+              <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
                 No users found.
               </TableCell>
             </TableRow>
@@ -67,6 +72,16 @@ export function UsersTable({ users, isPending }: UsersTableProps) {
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {new Date(user.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Edit ${user.name}`}
+                    onClick={() => onEdit(user)}
+                  >
+                    <PencilIcon />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))

@@ -4,8 +4,11 @@ import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { prisma } from "./db.js";
 import { auth } from "./auth.js";
-import { requireAdmin } from "./middleware/auth.js";
+import { requireAdmin, requireAuth } from "./middleware/auth.js";
 import { usersRouter } from "./routes/users.js";
+import { ticketsRouter } from "./routes/tickets.js";
+import { webhooksRouter } from "./routes/webhooks.js";
+import { requireWebhookSecret } from "./middleware/webhookSecret.js";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 3001);
@@ -15,6 +18,11 @@ app.all("/api/auth/*", toNodeHandler(auth));
 app.use(express.json());
 
 app.use("/api/users", requireAdmin, usersRouter);
+app.use("/api/tickets", requireAuth, ticketsRouter);
+app.use("/api/webhooks", requireWebhookSecret, webhooksRouter);
+if (!process.env.WEBHOOK_SECRET) {
+  console.warn("Warning: WEBHOOK_SECRET is not set — webhook endpoint will reject all requests");
+}
 
 app.get("/api/health", async (_req: Request, res: Response) => {
   try {

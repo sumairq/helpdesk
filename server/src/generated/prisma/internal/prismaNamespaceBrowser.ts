@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  Ticket: 'Ticket',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification'
@@ -86,6 +87,23 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const TicketScalarFieldEnum = {
+  id: 'id',
+  subject: 'subject',
+  body: 'body',
+  bodyHtml: 'bodyHtml',
+  senderEmail: 'senderEmail',
+  senderName: 'senderName',
+  status: 'status',
+  category: 'category',
+  assignedToId: 'assignedToId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof TicketScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {

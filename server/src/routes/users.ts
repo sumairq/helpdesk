@@ -1,20 +1,11 @@
 import { Router, type Request, type Response } from "express";
-import { type ZodSchema } from "zod";
 import { createUserSchema, editUserSchema, Role } from "@helpdesk/core";
 import { hashPassword } from "@better-auth/utils/password";
 import { generateId } from "better-auth";
 import { prisma } from "../db.js";
+import { validate } from "../lib/validate.js";
 
 export const usersRouter = Router();
-
-function validate<T>(schema: ZodSchema<T>, body: unknown, res: Response): T | null {
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.issues[0].message });
-    return null;
-  }
-  return parsed.data;
-}
 
 usersRouter.get("/", async (_req: Request, res: Response) => {
   const users = await prisma.user.findMany({

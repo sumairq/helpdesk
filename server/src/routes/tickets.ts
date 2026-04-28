@@ -48,6 +48,20 @@ ticketsRouter.get("/", async (req: Request, res: Response) => {
   res.json({ tickets, total, page: pagination.page, pageSize: pagination.pageSize });
 });
 
+ticketsRouter.get("/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid ticket ID" });
+    return;
+  }
+  const ticket = await prisma.ticket.findUnique({ where: { id } });
+  if (!ticket) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+  res.json({ ticket });
+});
+
 ticketsRouter.post("/", async (req: Request, res: Response) => {
   const data = validate(createTicketSchema, req.body, res);
   if (!data) return;

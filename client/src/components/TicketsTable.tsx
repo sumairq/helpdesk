@@ -8,6 +8,7 @@ import {
   type OnChangeFn,
 } from "@tanstack/react-table";
 import { ChevronUpIcon, ChevronDownIcon, ChevronsUpDownIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 import { TicketStatus, TicketCategory, type TicketSortableColumn } from "@helpdesk/core";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -61,7 +62,14 @@ const columns = [
   }),
   col.accessor("subject", {
     header: "Subject",
-    cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+    cell: (info) => (
+      <Link
+        to={`/tickets/${info.row.original.id}`}
+        className="font-medium"
+      >
+        {info.getValue()}
+      </Link>
+    ),
   }),
   col.display({
     id: "from",

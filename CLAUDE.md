@@ -81,7 +81,9 @@ Routes:
 
 - `/login` — `LoginPage`. RHF + Zod via `Controller`. On success, calls `authClient.signIn.email` and `navigate("/", { replace: true })`. Surfaces server errors in an `Alert`.
 - `/` — `HomePage`, behind `ProtectedRoute` + `Layout`.
-- `/users` — `UsersPage`, behind `ProtectedRoute` → `AdminRoute` + `Layout`. Currently a heading-only placeholder for admin user management.
+- `/tickets` — `TicketsPage`, behind `ProtectedRoute` + `Layout`. Sortable, filterable, paginated ticket list.
+- `/tickets/:id` — `TicketDetailPage`, behind `ProtectedRoute` + `Layout`. Full ticket view (subject, metadata, message body).
+- `/users` — `UsersPage`, behind `ProtectedRoute` → `AdminRoute` + `Layout`. Admin user management.
 - `*` — redirects to `/`.
 
 `Layout` (`client/src/components/Layout.tsx`) renders the top nav (brand, signed-in user name, sign-out button) and conditionally shows a "Users" link when `session?.user.role === "ADMIN"`. Client-side gating is for UX only — always enforce roles server-side on any future `/api/users` endpoints.
@@ -89,6 +91,8 @@ Routes:
 ## Styling: Tailwind v4
 
 `client/` uses **Tailwind v4** via `@tailwindcss/vite` (no PostCSS plugin, no `tailwind.config.js`). Theme is configured in `client/src/index.css` using `@theme inline { ... }` plus CSS custom properties on `:root` and `.dark`. Import with `@import "tailwindcss"` — the v3 `@tailwind base/components/utilities` directives are gone. The `dark` variant is set up via `@custom-variant dark (&:is(.dark *))`.
+
+**Link styling:** a global `a` rule in `@layer base` in `index.css` applies a color transition to all links. Links do **not** underline on hover — do not add `hover:underline` to individual links. To opt a link out of the color transition (e.g. a brand logo using opacity), add `hover:no-underline` if needed. **Important:** `@apply` with pseudo-class variants (e.g. `hover:underline`) does not work correctly inside `@layer base` in Tailwind v4 — write native CSS (`a:hover { text-decoration-line: underline; }`) instead.
 
 ## UI: shadcn (`base-nova` preset)
 

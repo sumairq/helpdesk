@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { TicketCategory } from "../enums.js";
+import { TicketCategory, TicketStatus } from "../enums.js";
+
+export const ticketFilterSchema = z.object({
+  search:   z.string().optional(),
+  status:   z.nativeEnum(TicketStatus).optional(),
+  category: z.union([z.nativeEnum(TicketCategory), z.literal("uncategorised")]).optional(),
+});
+
+export type TicketFilterValues = z.infer<typeof ticketFilterSchema>;
 
 export const ticketSortableColumns = ["id", "subject", "status", "category", "createdAt"] as const;
 export type TicketSortableColumn = (typeof ticketSortableColumns)[number];

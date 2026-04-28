@@ -53,7 +53,8 @@
       "Bash(PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION=\"it's okay if the dev database get's wiped for now...\" npx prisma *)",
       "Bash(curl -s -X POST 'http://localhost:3001/api/webhooks/email/inbound?token=dev-webhook-secret' -H 'Content-Type: application/json' -d '{ *)",
       "Bash(python -m json.tool)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(npx shadcn@latest add select)"
     ]
   }
 }

@@ -90,3 +90,162 @@ authTest.describe("Ticket list", () => {
     await expect(agentPage.getByRole("heading", { name: "Tickets" })).toBeVisible();
   });
 });
+
+authTest.describe("Ticket filtering", () => {
+  authTest("search filters by subject", async ({ adminPage, request }) => {
+    const unique = `SearchSubject-${Date.now()}`;
+    await createTicket(request, { subject: unique });
+
+    await adminPage.goto("/tickets");
+    await adminPage.getByPlaceholder("Search subject, name or email…").fill(unique);
+    await adminPage.waitForTimeout(400);
+
+    await expect(adminPage.getByRole("row").filter({ hasText: unique })).toBeVisible();
+  });
+
+  authTest("search filters by sender name", async ({ adminPage, request }) => {
+    const uniqueName = `UniqueSender-${Date.now()}`;
+    await createTicket(request, { senderName: uniqueName });
+
+    await adminPage.goto("/tickets");
+    await adminPage.getByPlaceholder("Search subject, name or email…").fill(uniqueName);
+    await adminPage.waitForTimeout(400);
+
+    await expect(adminPage.getByRole("row").filter({ hasText: uniqueName })).toBeVisible();
+  });
+
+  authTest("status filter 'Open' shows open tickets", async ({ adminPage, request }) => {
+    const unique = `OpenFilter-${Date.now()}`;
+    await createTicket(request, { subject: unique });
+
+    await adminPage.goto("/tickets");
+    await adminPage.getByPlaceholder("Search subject, name or email…").fill(unique);
+    await adminPage.waitForTimeout(400);
+
+    await adminPage.getByText("All Statuses").click();
+    await adminPage.getByRole("option", { name: "Open" }).click();
+
+    await expect(adminPage.getByRole("row").filter({ hasText: unique })).toBeVisible();
+  });
+
+  authTest("status filter 'Resolved' hides open tickets", async ({ adminPage, request }) => {
+    const unique = `ResolvedFilter-${Date.now()}`;
+    await createTicket(request, { subject: unique });
+
+    await adminPage.goto("/tickets");
+    await adminPage.getByPlaceholder("Search subject, name or email…").fill(unique);
+    await adminPage.waitForTimeout(400);
+
+    await adminPage.getByText("All Statuses").click();
+    await adminPage.getByRole("option", { name: "Resolved" }).click();
+
+    await expect(adminPage.getByText("No tickets yet.")).toBeVisible();
+  });
+
+  authTest("category filter shows only matching tickets", async ({ adminPage }) => {
+    const unique = `TechFilter-${Date.now()}`;
+    await adminPage.request.post("/api/tickets", {
+      data: {
+        subject: unique,
+        body: "Technical issue.",
+        senderName: "Tech Tester",
+        senderEmail: `tech-${Date.now()}@helpdesk.test`,
+        category: "technical",
+      },
+    });
+
+    await adminPage.goto("/tickets");
+    await adminPage.getByPlaceholder("Search subject, name or email…").fill(unique);
+    await adminPage.waitForTimeout(400);
+
+    await adminPage.getByText("All Categories").click();
+    await adminPage.getByRole("option", { name: "Technical" }).click();
+
+    await expect(adminPage.getByRole("row").filter({ hasText: unique })).toBeVisible();
+  });
+
+  authTest("category filter hides tickets from other categories", async ({ adminPage, request }) => {
+    const unique = `UncatFilter-${Date.now()}`;
+    await createTicket(request, { subject: unique }); // no category → uncategorised
+
+    await adminPage.goto("/tickets");
+    await adminPage.getByPlaceholder("Search subject, name or email…").fill(unique);
+    await adminPage.waitForTimeout(400);
+
+    await adminPage.getByText("All Categories").click();
+    await adminPage.getByRole("option", { name: "Technical" }).click();
+
+    await expect(adminPage.getByText("No tickets yet.")).toBeVisible();
+  });
+
+  authTest("combining status and category filters narrows results", async ({ adminPage }) => {
+    const unique = `CombinedFilter-${Date.now()}`;
+    await adminPage.request.post("/api/tickets", {
+      data: {
+        subject: unique,
+        body: "Refund please.",
+        senderName: "Combined Tester",
+        senderEmail: `combined-${Date.now()}@helpdesk.test`,
+        category: "refund",
+      },
+    });
+
+    await adminPage.goto("/tickets");
+    await adminPage.getByPlaceholder("Search subject, name or email…").fill(unique);
+    await adminPage.waitForTimeout(400);
+
+    await adminPage.getByText("All Statuses").click();
+    await adminPage.getByRole("option", { name: "Open" }).click();
+
+    await adminPage.getByText("All Categories").click();
+    await adminPage.getByRole("option", { name: "Refund" }).click();
+
+    await expect(adminPage.getByRole("row").filter({ hasText: unique })).toBeVisible();
+  });
+
+  authTest("resetting status filter back to All Statuses restores results", async ({ adminPage, request }) => {
+    const unique = `ResetFilter-${Date.now()}`;
+    await createTicket(request, { subject: unique });
+
+    await adminPage.goto("/tickets");
+    await adminPage.getByPlaceholder("Search subject, name or email…").fill(unique);
+    await adminPage.waitForTimeout(400);
+
+    await adminPage.getByText("All Statuses").click();
+    await adminPage.getByRole("option", { name: "Resolved" }).click();
+    await expect(adminPage.getByText("No tickets yet.")).toBeVisible();
+
+    await adminPage.getByText("Resolved").click();
+    await adminPage.getByRole("option", { name: "All Statuses" }).click();
+    await expect(adminPage.getByRole("row").filter({ hasText: unique })).toBeVisible();
+  });
+});
+
+authTest.describe("Ticket sorting", () => {
+  authTest("clicking Subject header sorts tickets ascending then descending", async ({ adminPage, request }) => {
+    const ts = Date.now();
+    await createTicket(request, { subject: `AAA-Sort-${ts}` });
+    await createTicket(request, { subject: `ZZZ-Sort-${ts}` });
+
+    await adminPage.goto("/tickets");
+
+    // Click once for ascending
+    await adminPage.getByRole("columnheader", { name: /Subject/ }).click();
+
+    const getIndex = async (text: string) =>
+      adminPage.getByRole("row").filter({ hasText: text }).evaluate((el) =>
+        Array.from(el.closest("tbody")!.querySelectorAll("tr")).indexOf(el as HTMLTableRowElement)
+      );
+
+    const aIdx = await getIndex(`AAA-Sort-${ts}`);
+    const zIdx = await getIndex(`ZZZ-Sort-${ts}`);
+    expect(aIdx).toBeLessThan(zIdx);
+
+    // Click again for descending
+    await adminPage.getByRole("columnheader", { name: /Subject/ }).click();
+
+    const aIdxDesc = await getIndex(`AAA-Sort-${ts}`);
+    const zIdxDesc = await getIndex(`ZZZ-Sort-${ts}`);
+    expect(zIdxDesc).toBeLessThan(aIdxDesc);
+  });
+});

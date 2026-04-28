@@ -42,6 +42,7 @@ helpdesk/
 - Keep API routes thin; put logic in service modules
 - **Server-side validation:** use `zod` with `schema.safeParse(req.body)` at the top of every route handler that accepts a request body. Return `400` with `{ error: parsed.error.issues[0].message }` on failure. Never trust the raw body.
 - **Shared Zod schemas:** define schemas used by both client and server in `core/src/schemas/` and export them from `core/src/index.ts`. Both `client` and `server` depend on `@helpdesk/core` — import the schema from there rather than duplicating it. Add `CreateXxxValues = z.infer<typeof xxxSchema>` in the same file and export the type alongside the schema.
+- **Role enum:** always import `Role` from `@helpdesk/core` — never use the magic strings `"ADMIN"` or `"AGENT"` directly. The enum is defined in `core/src/enums.ts` and is the single source of truth for both client and server.
 - **No try/catch in route handlers:** the server uses Express 5, which automatically forwards thrown errors and rejected promises to the error-handling middleware. Do not wrap route handlers in try/catch.
 
 ## Authentication

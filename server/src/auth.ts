@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { Role } from "@helpdesk/core";
 import { prisma } from "./db.js";
-import { Role } from "./generated/prisma/enums.js";
 
 const secret = process.env.BETTER_AUTH_SECRET;
 if (!secret || secret.length < 32) {
@@ -22,8 +22,14 @@ export const auth = betterAuth({
     additionalFields: {
       role: {
         type: [Role.ADMIN, Role.AGENT],
-        required: false,
+        required: true,
         defaultValue: Role.AGENT,
+        input: false,
+      },
+      deletedAt: {
+        type: "date",
+        required: false,
+        defaultValue: null,
         input: false,
       },
     },
@@ -38,6 +44,19 @@ export const auth = betterAuth({
     max: 100,
     customRules: {
       "/sign-in/email": { window: 60, max: 5 },
+    },
+  },
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          const user = await prisma.user.findUnique({
+            where: { id: session.userId },
+            select: { deletedAt: true },
+          });
+          if (user?.deletedAt) return false;
+        },
+      },
     },
   },
   secret,

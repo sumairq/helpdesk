@@ -11,7 +11,7 @@ export async function requireAuth(
   const session = await auth.api.getSession({
     headers: fromNodeHeaders(req.headers),
   });
-  if (!session) {
+  if (!session || session.user.deletedAt) {
     return res.status(401).json({ error: "Unauthorized" });
   }
   res.locals.session = session;

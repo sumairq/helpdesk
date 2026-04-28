@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { CreateUserDialog } from "@/components/CreateUserDialog";
 import { EditUserDialog } from "@/components/EditUserDialog";
+import { DeleteUserDialog } from "@/components/DeleteUserDialog";
 import { UsersTable, type User } from "@/components/UsersTable";
 
 async function fetchUsers(): Promise<User[]> {
@@ -14,6 +15,7 @@ async function fetchUsers(): Promise<User[]> {
 export function UsersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const { data: users = [], isPending, error } = useQuery({ queryKey: ["users"], queryFn: fetchUsers });
 
   return (
@@ -25,6 +27,7 @@ export function UsersPage() {
 
       <CreateUserDialog open={createOpen} onOpenChange={setCreateOpen} />
       <EditUserDialog user={editingUser} onClose={() => setEditingUser(null)} />
+      <DeleteUserDialog user={deletingUser} onClose={() => setDeletingUser(null)} />
 
       {error && (
         <p className="text-destructive">
@@ -33,7 +36,12 @@ export function UsersPage() {
       )}
 
       {!error && (
-        <UsersTable users={users} isPending={isPending} onEdit={setEditingUser} />
+        <UsersTable
+          users={users}
+          isPending={isPending}
+          onEdit={setEditingUser}
+          onDelete={setDeletingUser}
+        />
       )}
     </main>
   );

@@ -48,7 +48,8 @@
       "Bash(npx shadcn@latest add skeleton)",
       "Bash(npx shadcn@latest add dialog --yes)",
       "Read(//tmp/**)",
-      "Bash(npx shadcn@latest add table --yes)"
+      "Bash(npx shadcn@latest add table --yes)",
+      "Bash(netstat -ano)"
     ]
   }
 }

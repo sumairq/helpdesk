@@ -1,4 +1,5 @@
-import { PencilIcon } from "lucide-react";
+import { PencilIcon, Trash2Icon } from "lucide-react";
+import { Role } from "@helpdesk/core";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "AGENT";
+  role: Role;
   createdAt: string;
 }
 
@@ -22,9 +23,10 @@ interface UsersTableProps {
   users: User[];
   isPending: boolean;
   onEdit: (user: User) => void;
+  onDelete: (user: User) => void;
 }
 
-export function UsersTable({ users, isPending, onEdit }: UsersTableProps) {
+export function UsersTable({ users, isPending, onEdit, onDelete }: UsersTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -62,7 +64,7 @@ export function UsersTable({ users, isPending, onEdit }: UsersTableProps) {
                 <TableCell>
                   <span
                     className={
-                      user.role === "ADMIN"
+                      user.role === Role.ADMIN
                         ? "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary"
                         : "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground"
                     }
@@ -82,6 +84,16 @@ export function UsersTable({ users, isPending, onEdit }: UsersTableProps) {
                   >
                     <PencilIcon />
                   </Button>
+                  {user.role !== Role.ADMIN && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Delete ${user.name}`}
+                      onClick={() => onDelete(user)}
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ))

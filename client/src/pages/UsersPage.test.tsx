@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Role } from "@helpdesk/core";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import axios from "axios";
@@ -16,6 +17,17 @@ vi.mock("@/components/ui/dialog", () => ({
   DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
   DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock("@/components/DeleteUserDialog", () => ({
+  DeleteUserDialog: ({ user, onClose }: { user: { id: string; name: string } | null; onClose: () => void }) =>
+    user ? (
+      <div>
+        <p>Delete {user.name}?</p>
+        <button onClick={onClose}>Cancel</button>
+        <button onClick={onClose}>Delete</button>
+      </div>
+    ) : null,
 }));
 
 // Wrap the real CreateUserDialog with dismiss simulation so that both the form
@@ -52,14 +64,14 @@ const mockUsers = [
     id: "1",
     name: "Alice Admin",
     email: "alice@helpdesk.local",
-    role: "ADMIN" as const,
+    role: Role.ADMIN,
     createdAt: "2024-01-15T10:00:00.000Z",
   },
   {
     id: "2",
     name: "Bob Agent",
     email: "bob@helpdesk.local",
-    role: "AGENT" as const,
+    role: Role.AGENT,
     createdAt: "2024-03-20T08:30:00.000Z",
   },
 ];
@@ -211,6 +223,29 @@ describe("UsersPage", () => {
       { withCredentials: true },
     );
     expect(mockedAxios.get).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not show a delete button for ADMIN users", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users: mockUsers } });
+    renderWithQuery(<UsersPage />);
+    await waitFor(() => screen.getByText("Alice Admin"));
+    expect(screen.queryByRole("button", { name: "Delete Alice Admin" })).not.toBeInTheDocument();
+  });
+
+  it("shows a delete button for AGENT users", async () => {
+    mockedAxios.get.mockResolvedValue({ data: { users: mockUsers } });
+    renderWithQuery(<UsersPage />);
+    await waitFor(() => screen.getByText("Bob Agent"));
+    expect(screen.getByRole("button", { name: "Delete Bob Agent" })).toBeInTheDocument();
+  });
+
+  it("opens the delete confirmation dialog when delete is clicked", async () => {
+    const user = userEvent.setup();
+    mockedAxios.get.mockResolvedValue({ data: { users: mockUsers } });
+    renderWithQuery(<UsersPage />);
+    await waitFor(() => screen.getByRole("button", { name: "Delete Bob Agent" }));
+    await user.click(screen.getByRole("button", { name: "Delete Bob Agent" }));
+    expect(screen.getByText("Delete Bob Agent?")).toBeInTheDocument();
   });
 
   it("displays a server error inside the modal when creation fails", async () => {

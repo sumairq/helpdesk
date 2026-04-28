@@ -1,13 +1,15 @@
 import { Router, type Request, type Response } from "express";
-import { createTicketSchema } from "@helpdesk/core";
+import { createTicketSchema, ticketSortSchema } from "@helpdesk/core";
 import { prisma } from "../db.js";
 import { validate } from "../lib/validate.js";
 
 export const ticketsRouter = Router();
 
-ticketsRouter.get("/", async (_req: Request, res: Response) => {
+ticketsRouter.get("/", async (req: Request, res: Response) => {
+  const sort = validate(ticketSortSchema, req.query, res);
+  if (!sort) return;
   const tickets = await prisma.ticket.findMany({
-    orderBy: { createdAt: "desc" },
+    orderBy: { [sort.sortBy]: sort.sortOrder },
   });
   res.json({ tickets });
 });

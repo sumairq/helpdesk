@@ -147,10 +147,13 @@ describe("TicketsPage", () => {
     });
   });
 
-  it("fetches from /api/tickets with credentials", async () => {
+  it("fetches from /api/tickets with default sort params", async () => {
     renderWithQuery(<TicketsPage />);
     await waitFor(() => {
-      expect(mockedAxios.get).toHaveBeenCalledWith("/api/tickets", { withCredentials: true });
+      expect(mockedAxios.get).toHaveBeenCalledWith("/api/tickets", {
+        params: { sortBy: "createdAt", sortOrder: "desc" },
+        withCredentials: true,
+      });
     });
   });
 });

@@ -1,4 +1,14 @@
-import { TicketStatus, TicketCategory } from "@helpdesk/core";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  createColumnHelper,
+  functionalUpdate,
+  type SortingState,
+  type OnChangeFn,
+} from "@tanstack/react-table";
+import { ChevronUpIcon, ChevronDownIcon, ChevronsUpDownIcon } from "lucide-react";
+import { TicketStatus, TicketCategory, type TicketSortableColumn } from "@helpdesk/core";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -33,69 +43,136 @@ const categoryLabels: Record<TicketCategory, string> = {
   [TicketCategory.refund]: "Refund",
 };
 
+const SORTABLE_COLUMNS = new Set<TicketSortableColumn>(["id", "subject", "status", "category", "createdAt"]);
+
 interface TicketsTableProps {
   tickets: Ticket[];
   isPending: boolean;
+  sorting: SortingState;
+  onSortingChange: OnChangeFn<SortingState>;
 }
 
-export function TicketsTable({ tickets, isPending }: TicketsTableProps) {
+const col = createColumnHelper<Ticket>();
+
+const columns = [
+  col.accessor("id", {
+    header: "ID",
+    cell: (info) => <span className="font-mono text-muted-foreground">#{info.getValue()}</span>,
+  }),
+  col.accessor("subject", {
+    header: "Subject",
+    cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+  }),
+  col.display({
+    id: "from",
+    header: "From",
+    cell: ({ row }) => (
+      <div>
+        <div>{row.original.senderName}</div>
+        <div className="text-xs text-muted-foreground">{row.original.senderEmail}</div>
+      </div>
+    ),
+  }),
+  col.accessor("category", {
+    header: "Category",
+    cell: (info) => {
+      const cat = info.getValue();
+      return cat ? (
+        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground">
+          {categoryLabels[cat]}
+        </span>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      );
+    },
+  }),
+  col.accessor("status", {
+    header: "Status",
+    cell: (info) => (
+      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[info.getValue()]}`}>
+        {info.getValue()}
+      </span>
+    ),
+  }),
+  col.accessor("createdAt", {
+    header: "Received",
+    cell: (info) => (
+      <span className="text-muted-foreground">
+        {new Date(info.getValue()).toLocaleDateString()}
+      </span>
+    ),
+  }),
+];
+
+function SortIcon({ isSorted }: { isSorted: false | "asc" | "desc" }) {
+  if (isSorted === "asc") return <ChevronUpIcon className="ml-1 inline h-3.5 w-3.5" />;
+  if (isSorted === "desc") return <ChevronDownIcon className="ml-1 inline h-3.5 w-3.5" />;
+  return <ChevronsUpDownIcon className="ml-1 inline h-3.5 w-3.5 opacity-40" />;
+}
+
+export function TicketsTable({ tickets, isPending, sorting, onSortingChange }: TicketsTableProps) {
+  const table = useReactTable({
+    data: tickets,
+    columns,
+    state: { sorting },
+    onSortingChange,
+    manualSorting: true,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/50">
-            <TableHead>ID</TableHead>
-            <TableHead>Subject</TableHead>
-            <TableHead>From</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Received</TableHead>
-          </TableRow>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id} className="bg-muted/50">
+              {headerGroup.headers.map((header) => {
+                const isSortable = SORTABLE_COLUMNS.has(header.column.id as TicketSortableColumn);
+                return (
+                  <TableHead
+                    key={header.id}
+                    className={isSortable ? "cursor-pointer select-none" : ""}
+                    onClick={isSortable ? () => {
+                      const current = sorting[0];
+                      const isActive = current?.id === header.column.id;
+                      const next: SortingState = [{
+                        id: header.column.id,
+                        desc: isActive ? !current.desc : false,
+                      }];
+                      onSortingChange(functionalUpdate(next, sorting));
+                    } : undefined}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {isSortable && <SortIcon isSorted={header.column.getIsSorted()} />}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
         </TableHeader>
         <TableBody>
           {isPending ? (
             Array.from({ length: 5 }).map((_, i) => (
               <TableRow key={i}>
-                <TableCell><Skeleton className="h-4 w-8" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-48" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-36" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
-                <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
-                <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                {columns.map((_, j) => (
+                  <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                ))}
               </TableRow>
             ))
-          ) : tickets.length === 0 ? (
+          ) : table.getRowModel().rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
+              <TableCell colSpan={columns.length} className="py-6 text-center text-muted-foreground">
                 No tickets yet.
               </TableCell>
             </TableRow>
           ) : (
-            tickets.map((ticket) => (
-              <TableRow key={ticket.id}>
-                <TableCell className="text-muted-foreground font-mono">#{ticket.id}</TableCell>
-                <TableCell className="font-medium">{ticket.subject}</TableCell>
-                <TableCell>
-                  <div>{ticket.senderName}</div>
-                  <div className="text-xs text-muted-foreground">{ticket.senderEmail}</div>
-                </TableCell>
-                <TableCell>
-                  {ticket.category ? (
-                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground">
-                      {categoryLabels[ticket.category]}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusStyles[ticket.status]}`}>
-                    {ticket.status}
-                  </span>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {new Date(ticket.createdAt).toLocaleDateString()}
-                </TableCell>
+            table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
               </TableRow>
             ))
           )}

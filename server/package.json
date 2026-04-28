@@ -8,6 +8,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "seed": "tsx src/seed.ts",
+    "seed:tickets": "tsx src/seed-tickets.ts",
     "start:test": "dotenv -e .env.test -- tsx src/index.ts",
     "db:migrate:test": "dotenv -e .env.test -- prisma migrate deploy",
     "db:reset:test": "dotenv -e .env.test -- prisma migrate reset --force",

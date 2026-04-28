@@ -1,6 +1,16 @@
 import { z } from "zod";
 import { TicketCategory } from "../enums.js";
 
+export const ticketSortableColumns = ["id", "subject", "status", "category", "createdAt"] as const;
+export type TicketSortableColumn = (typeof ticketSortableColumns)[number];
+
+export const ticketSortSchema = z.object({
+  sortBy:    z.enum(ticketSortableColumns).default("createdAt"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+});
+
+export type TicketSortValues = z.infer<typeof ticketSortSchema>;
+
 export const inboundEmailSchema = z.object({
   subject:     z.string().trim().min(1, "Subject is required").transform((s) => s.replace(/^(re|fwd|fw):\s*/gi, "").trim()),
   body:        z.string().trim().min(1, "Body is required"),

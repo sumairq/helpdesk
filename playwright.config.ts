@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const SERVER_PORT = Number(process.env.E2E_SERVER_PORT ?? 3001);
-const CLIENT_PORT = Number(process.env.E2E_CLIENT_PORT ?? 5173);
+const SERVER_PORT = Number(process.env.E2E_SERVER_PORT ?? 3002);
+const CLIENT_PORT = Number(process.env.E2E_CLIENT_PORT ?? 5174);
 
 export default defineConfig({
   testDir: "./e2e",
@@ -36,12 +36,13 @@ export default defineConfig({
       stderr: "pipe",
     },
     {
-      command: "npm run dev --workspace client",
+      command: `npm run dev --workspace client -- --port ${CLIENT_PORT}`,
       url: `http://localhost:${CLIENT_PORT}`,
       timeout: 120_000,
-      reuseExistingServer: !process.env.CI,
+      reuseExistingServer: false,
       stdout: "pipe",
       stderr: "pipe",
+      env: { VITE_API_TARGET: `http://localhost:${SERVER_PORT}` },
     },
   ],
 });

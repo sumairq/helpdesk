@@ -5,7 +5,7 @@
  * Better Auth's sign-in endpoint: POST /api/auth/sign-in/email
  * It returns session cookies via Set-Cookie headers.
  */
-import { BETTER_AUTH_URL } from "./env.js";
+const BETTER_AUTH_URL = process.env["BETTER_AUTH_URL"] ?? "http://localhost:3002";
 
 export interface AuthCookie {
   name: string;

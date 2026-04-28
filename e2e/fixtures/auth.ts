@@ -13,8 +13,10 @@
  *   - agentPage — a Page already authenticated as the seeded AGENT
  */
 import { test as base, expect, type Page } from "@playwright/test";
-import { SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD } from "../helpers/env.js";
 import { seedAgentUser, AGENT_EMAIL, AGENT_PASSWORD } from "../helpers/seed-agent.js";
+
+const SEED_ADMIN_EMAIL = process.env["SEED_ADMIN_EMAIL"]!;
+const SEED_ADMIN_PASSWORD = process.env["SEED_ADMIN_PASSWORD"]!;
 
 export { AGENT_EMAIL, AGENT_PASSWORD, SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD };
 

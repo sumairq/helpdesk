@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { config } from "dotenv";
+import { resolve } from "node:path";
+
+config({ path: resolve(__dirname, "server/.env.test") });
 
 const SERVER_PORT = Number(process.env.E2E_SERVER_PORT ?? 3002);
 const CLIENT_PORT = Number(process.env.E2E_CLIENT_PORT ?? 5174);

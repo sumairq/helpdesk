@@ -19,6 +19,15 @@ export const ticketSortSchema = z.object({
 
 export type TicketSortValues = z.infer<typeof ticketSortSchema>;
 
+export const PAGE_SIZE = 10;
+
+export const ticketPaginationSchema = z.object({
+  page:     z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(PAGE_SIZE),
+});
+
+export type TicketPaginationValues = z.infer<typeof ticketPaginationSchema>;
+
 export const inboundEmailSchema = z.object({
   subject:     z.string().trim().min(1, "Subject is required").transform((s) => s.replace(/^(re|fwd|fw):\s*/gi, "").trim()),
   body:        z.string().trim().min(1, "Body is required"),

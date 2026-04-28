@@ -39,7 +39,7 @@ const mockTickets = [
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mockedAxios.get.mockResolvedValue({ data: { tickets: [] } });
+  mockedAxios.get.mockResolvedValue({ data: { tickets: [], total: 0, page: 1, pageSize: 10 } });
 });
 
 describe("TicketsPage", () => {
@@ -63,7 +63,7 @@ describe("TicketsPage", () => {
   });
 
   it("renders a row for each ticket after loading", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { tickets: mockTickets } });
+    mockedAxios.get.mockResolvedValue({ data: { tickets: mockTickets, total: mockTickets.length, page: 1, pageSize: 10 } });
     renderWithQuery(<TicketsPage />);
     await waitFor(() => {
       expect(screen.getByText("Keyboard not working")).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe("TicketsPage", () => {
   });
 
   it("renders sender name and email for each ticket", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { tickets: mockTickets } });
+    mockedAxios.get.mockResolvedValue({ data: { tickets: mockTickets, total: mockTickets.length, page: 1, pageSize: 10 } });
     renderWithQuery(<TicketsPage />);
     await waitFor(() => {
       expect(screen.getByText("Alice Student")).toBeInTheDocument();
@@ -83,7 +83,7 @@ describe("TicketsPage", () => {
   });
 
   it("renders status badges", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { tickets: mockTickets } });
+    mockedAxios.get.mockResolvedValue({ data: { tickets: mockTickets, total: mockTickets.length, page: 1, pageSize: 10 } });
     renderWithQuery(<TicketsPage />);
     await waitFor(() => {
       expect(screen.getByText("open")).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe("TicketsPage", () => {
   });
 
   it("renders category badges", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { tickets: mockTickets } });
+    mockedAxios.get.mockResolvedValue({ data: { tickets: mockTickets, total: mockTickets.length, page: 1, pageSize: 10 } });
     renderWithQuery(<TicketsPage />);
     await waitFor(() => {
       expect(screen.getByText("Technical")).toBeInTheDocument();
@@ -102,9 +102,7 @@ describe("TicketsPage", () => {
 
   it("renders — for tickets with no category", async () => {
     mockedAxios.get.mockResolvedValue({
-      data: {
-        tickets: [{ ...mockTickets[0], category: null }],
-      },
+      data: { tickets: [{ ...mockTickets[0], category: null }], total: 1, page: 1, pageSize: 10 },
     });
     renderWithQuery(<TicketsPage />);
     await waitFor(() => {
@@ -113,7 +111,7 @@ describe("TicketsPage", () => {
   });
 
   it("renders ticket IDs prefixed with #", async () => {
-    mockedAxios.get.mockResolvedValue({ data: { tickets: mockTickets } });
+    mockedAxios.get.mockResolvedValue({ data: { tickets: mockTickets, total: mockTickets.length, page: 1, pageSize: 10 } });
     renderWithQuery(<TicketsPage />);
     await waitFor(() => {
       expect(screen.getByText("#1")).toBeInTheDocument();
@@ -147,11 +145,11 @@ describe("TicketsPage", () => {
     });
   });
 
-  it("fetches from /api/tickets with default sort params", async () => {
+  it("fetches from /api/tickets with default sort and pagination params", async () => {
     renderWithQuery(<TicketsPage />);
     await waitFor(() => {
       expect(mockedAxios.get).toHaveBeenCalledWith("/api/tickets", {
-        params: { sortBy: "createdAt", sortOrder: "desc" },
+        params: { sortBy: "createdAt", sortOrder: "desc", page: 1, pageSize: 10 },
         withCredentials: true,
       });
     });

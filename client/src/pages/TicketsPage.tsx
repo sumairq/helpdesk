@@ -1,30 +1,50 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { type SortingState } from "@tanstack/react-table";
-import { type TicketFilterValues } from "@helpdesk/core";
+import { type TicketFilterValues, PAGE_SIZE } from "@helpdesk/core";
 import { TicketsFilters } from "@/components/TicketsFilters";
 import { TicketsTable, type Ticket } from "@/components/TicketsTable";
+import { TicketsPagination } from "@/components/TicketsPagination";
+
+interface TicketsResponse {
+  tickets: Ticket[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
 
 async function fetchTickets(
   sortBy: string,
   sortOrder: string,
   filters: TicketFilterValues,
-): Promise<Ticket[]> {
-  const res = await axios.get<{ tickets: Ticket[] }>("/api/tickets", {
-    params: { sortBy, sortOrder, ...filters },
+  page: number,
+): Promise<TicketsResponse> {
+  const res = await axios.get<TicketsResponse>("/api/tickets", {
+    params: { sortBy, sortOrder, ...filters, page, pageSize: PAGE_SIZE },
     withCredentials: true,
   });
-  return res.data.tickets;
+  return res.data;
 }
 
-
 export function TicketsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sorting, setSorting] = useState<SortingState>([{ id: "createdAt", desc: true }]);
   const [searchInput, setSearchInput] = useState("");
   const [filters, setFilters] = useState<TicketFilterValues>({});
 
-  // Debounce search input
+  const page = Math.max(1, Number(searchParams.get("page") ?? 1));
+
+  const setPage = (next: number) => {
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev);
+      p.set("page", String(next));
+      return p;
+    }, { replace: true });
+  };
+
+  // Debounce the search filter update; page reset happens in handleSearchChange
   useEffect(() => {
     const id = setTimeout(() => {
       setFilters((f) => ({ ...f, search: searchInput || undefined }));
@@ -32,13 +52,27 @@ export function TicketsPage() {
     return () => clearTimeout(id);
   }, [searchInput]);
 
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    setPage(1);
+  };
+
+  const handleFiltersChange = (next: TicketFilterValues) => {
+    setFilters(next);
+    setPage(1);
+  };
+
   const sortBy    = sorting[0]?.id ?? "createdAt";
   const sortOrder = sorting[0]?.desc === false ? "asc" : "desc";
 
-  const { data: tickets = [], isPending, error } = useQuery({
-    queryKey: ["tickets", sortBy, sortOrder, filters],
-    queryFn: () => fetchTickets(sortBy, sortOrder, filters),
+  const { data, isPending, error } = useQuery({
+    queryKey: ["tickets", sortBy, sortOrder, filters, page],
+    queryFn: () => fetchTickets(sortBy, sortOrder, filters, page),
   });
+
+  const tickets   = data?.tickets ?? [];
+  const total     = data?.total ?? 0;
+  const pageCount = Math.ceil(total / PAGE_SIZE);
 
   return (
     <main className="p-8">
@@ -49,8 +83,8 @@ export function TicketsPage() {
       <TicketsFilters
         searchInput={searchInput}
         filters={filters}
-        onSearchChange={setSearchInput}
-        onFiltersChange={setFilters}
+        onSearchChange={handleSearchChange}
+        onFiltersChange={handleFiltersChange}
       />
 
       {error && (
@@ -60,12 +94,21 @@ export function TicketsPage() {
       )}
 
       {!error && (
-        <TicketsTable
-          tickets={tickets}
-          isPending={isPending}
-          sorting={sorting}
-          onSortingChange={setSorting}
-        />
+        <>
+          <TicketsTable
+            tickets={tickets}
+            isPending={isPending}
+            sorting={sorting}
+            onSortingChange={setSorting}
+          />
+          <TicketsPagination
+            page={page}
+            pageCount={pageCount}
+            total={total}
+            isPending={isPending}
+            onPageChange={setPage}
+          />
+        </>
       )}
     </main>
   );

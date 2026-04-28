@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { createTicketSchema, ticketSortSchema, ticketFilterSchema } from "@helpdesk/core";
+import { createTicketSchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema } from "@helpdesk/core";
 import { type Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
 import { validate } from "../lib/validate.js";
@@ -30,11 +30,22 @@ ticketsRouter.get("/", async (req: Request, res: Response) => {
     ];
   }
 
-  const tickets = await prisma.ticket.findMany({
-    where,
-    orderBy: { [sort.sortBy]: sort.sortOrder },
-  });
-  res.json({ tickets });
+  const pagination = validate(ticketPaginationSchema, req.query, res);
+  if (!pagination) return;
+
+  const skip = (pagination.page - 1) * pagination.pageSize;
+
+  const [tickets, total] = await prisma.$transaction([
+    prisma.ticket.findMany({
+      where,
+      orderBy: { [sort.sortBy]: sort.sortOrder },
+      skip,
+      take: pagination.pageSize,
+    }),
+    prisma.ticket.count({ where }),
+  ]);
+
+  res.json({ tickets, total, page: pagination.page, pageSize: pagination.pageSize });
 });
 
 ticketsRouter.post("/", async (req: Request, res: Response) => {

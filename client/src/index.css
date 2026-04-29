@@ -117,6 +117,10 @@
     --sidebar-ring: oklch(0.556 0 0);
 }
 
+@utility section-label {
+  @apply text-xs font-semibold uppercase tracking-wider text-muted-foreground;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -27,6 +27,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   assignedTickets Ticket[]
+  replies         TicketReply[]
 }
 
 enum TicketStatus {
@@ -41,6 +42,11 @@ enum TicketCategory {
   refund
 }
 
+enum SenderType {
+  agent
+  customer
+}
+
 model Ticket {
   id           Int             @id @default(autoincrement())
   subject      String
@@ -52,8 +58,20 @@ model Ticket {
   category     TicketCategory?
   assignedToId String?
   assignedTo   User?           @relation(fields: [assignedToId], references: [id])
+  replies      TicketReply[]
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
+}
+
+model TicketReply {
+  id         Int        @id @default(autoincrement())
+  ticketId   Int
+  ticket     Ticket     @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  senderType SenderType
+  authorId   String?
+  author     User?      @relation(fields: [authorId], references: [id])
+  body       String
+  createdAt  DateTime   @default(now())
 }
 
 model Session {

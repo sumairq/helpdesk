@@ -9,3 +9,16 @@ export function validate<T>(schema: ZodSchema<T>, body: unknown, res: Response):
   }
   return parsed.data;
 }
+
+export function parseIntId(raw: string | string[], res: Response): number | null {
+  if (Array.isArray(raw)) {
+    res.status(400).json({ error: "Invalid ticket ID" });
+    return null;
+  }
+  const id = Number(raw);
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid ticket ID" });
+    return null;
+  }
+  return id;
+}

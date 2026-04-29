@@ -6,6 +6,7 @@ import { CreateUserDialog } from "@/components/CreateUserDialog";
 import { EditUserDialog } from "@/components/EditUserDialog";
 import { DeleteUserDialog } from "@/components/DeleteUserDialog";
 import { UsersTable, type User } from "@/components/UsersTable";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
 
 async function fetchUsers(): Promise<User[]> {
   const res = await axios.get<{ users: User[] }>("/api/users", { withCredentials: true });
@@ -29,11 +30,10 @@ export function UsersPage() {
       <EditUserDialog user={editingUser} onClose={() => setEditingUser(null)} />
       <DeleteUserDialog user={deletingUser} onClose={() => setDeletingUser(null)} />
 
-      {error && (
-        <p className="text-destructive">
-          {axios.isAxiosError(error) ? (error.response?.data?.error ?? error.message) : "Failed to load users"}
-        </p>
-      )}
+      <ErrorMessage
+        variant="page"
+        message={error ? (axios.isAxiosError(error) ? (error.response?.data?.error ?? error.message) : "Failed to load users") : null}
+      />
 
       {!error && (
         <UsersTable

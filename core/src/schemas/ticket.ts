@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TicketCategory, TicketStatus } from "../enums.js";
+import { stripSubjectPrefixes } from "../utils/subject.js";
 
 export const ticketFilterSchema = z.object({
   search:   z.string().optional(),
@@ -29,7 +30,7 @@ export const ticketPaginationSchema = z.object({
 export type TicketPaginationValues = z.infer<typeof ticketPaginationSchema>;
 
 export const inboundEmailSchema = z.object({
-  subject:     z.string().trim().min(1, "Subject is required").transform((s) => s.replace(/^(re|fwd|fw):\s*/gi, "").trim()),
+  subject:     z.string().trim().min(1, "Subject is required").transform(stripSubjectPrefixes),
   body:        z.string().trim().min(1, "Body is required"),
   bodyHtml:    z.string().optional(),
   senderEmail: z.string().min(1, "Email is required").check(z.email()),
@@ -57,3 +58,9 @@ export const updateTicketSchema = z.object({
 });
 
 export type UpdateTicketValues = z.infer<typeof updateTicketSchema>;
+
+export const createReplySchema = z.object({
+  body: z.string().trim().min(1, "Reply body is required"),
+});
+
+export type CreateReplyValues = z.infer<typeof createReplySchema>;

@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { inboundEmailSchema, TicketStatus } from "@helpdesk/core";
+import { inboundEmailSchema, TicketStatus, SenderType } from "@helpdesk/core";
 import { prisma } from "../db.js";
 import { validate } from "../lib/validate.js";
 
@@ -18,6 +18,14 @@ webhooksRouter.post("/email/inbound", async (_req: Request, res: Response) => {
   });
 
   if (existing) {
+    await prisma.ticketReply.create({
+      data: {
+        ticketId: existing.id,
+        senderType: SenderType.customer,
+        authorId: null,
+        body: data.body,
+      },
+    });
     res.status(200).json({ ticket: existing });
     return;
   }

@@ -86,6 +86,7 @@ function setupMocks(
   mockedAxios.get.mockImplementation((url: string) => {
     if (url === `/api/tickets/${ticket.id}`) return Promise.resolve({ data: { ticket } });
     if (url === "/api/tickets/agents") return Promise.resolve({ data: { agents } });
+    if (url === `/api/tickets/${ticket.id}/replies`) return Promise.resolve({ data: { replies: [] } });
     return Promise.reject(new Error(`Unexpected GET: ${url}`));
   });
 }
@@ -225,7 +226,7 @@ describe("TicketDetailPage", () => {
       data: { ticket: { ...mockTicket, assignedToId: "agent-1" } },
     });
     renderDetailPage();
-    await waitFor(() => screen.getByRole("heading", { name: mockTicket.subject }));
+    await waitFor(() => within(getFieldDd("Assigned to")).getByRole("option", { name: "Alice Agent" }));
 
     fireEvent.click(within(getFieldDd("Assigned to")).getByRole("option", { name: "Alice Agent" }));
 
@@ -264,7 +265,7 @@ describe("TicketDetailPage", () => {
       data: { ticket: { ...mockTicket, assignedToId: "agent-1" } },
     });
     renderDetailPage();
-    await waitFor(() => screen.getByRole("heading", { name: mockTicket.subject }));
+    await waitFor(() => within(getFieldDd("Assigned to")).getByRole("option", { name: "Alice Agent" }));
 
     fireEvent.click(within(getFieldDd("Assigned to")).getByRole("option", { name: "Alice Agent" }));
 

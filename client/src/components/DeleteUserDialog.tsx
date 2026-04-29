@@ -1,7 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -61,11 +61,7 @@ export function DeleteUserDialog({ user, onClose }: DeleteUserDialogProps) {
           This action cannot be undone.
         </p>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+        <ErrorMessage variant="alert" message={error} />
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={mutation.isPending}>

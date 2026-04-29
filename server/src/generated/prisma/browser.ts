@@ -28,6 +28,11 @@ export type User = Prisma.UserModel
  */
 export type Ticket = Prisma.TicketModel
 /**
+ * Model TicketReply
+ * 
+ */
+export type TicketReply = Prisma.TicketReplyModel
+/**
  * Model Session
  * 
  */

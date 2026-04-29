@@ -7,7 +7,7 @@ import { editUserSchema, type EditUserValues } from "@helpdesk/core";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import {
   Dialog,
   DialogContent,
@@ -101,9 +101,7 @@ export function EditUserDialog({ user, onClose }: EditUserDialogProps) {
                 />
               )}
             />
-            {errors.name && (
-              <p className="text-xs text-destructive">{errors.name.message}</p>
-            )}
+            <ErrorMessage variant="field" message={errors.name?.message} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -121,9 +119,7 @@ export function EditUserDialog({ user, onClose }: EditUserDialogProps) {
                 />
               )}
             />
-            {errors.email && (
-              <p className="text-xs text-destructive">{errors.email.message}</p>
-            )}
+            <ErrorMessage variant="field" message={errors.email?.message} />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -142,16 +138,10 @@ export function EditUserDialog({ user, onClose }: EditUserDialogProps) {
                 />
               )}
             />
-            {errors.password && (
-              <p className="text-xs text-destructive">{errors.password.message}</p>
-            )}
+            <ErrorMessage variant="field" message={errors.password?.message} />
           </div>
 
-          {formError && (
-            <Alert variant="destructive">
-              <AlertDescription>{formError}</AlertDescription>
-            </Alert>
-          )}
+          <ErrorMessage variant="alert" message={formError} />
 
           <DialogFooter>
             <Button type="submit" disabled={isSubmitting || mutation.isPending}>

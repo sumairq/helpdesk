@@ -46,6 +46,7 @@ helpdesk/
 - **Ticket enums:** `TicketStatus` and `TicketCategory` also live in `core/src/enums.ts` and must be imported from `@helpdesk/core`. Never hardcode status/category strings.
 - **Shared Zod schemas:** schemas used by both client and server live in `core/src/schemas/` and are exported from `core/src/index.ts`. Add `XxxValues = z.infer<typeof xxxSchema>` types alongside each schema.
 - **No try/catch in route handlers:** the server uses Express 5, which automatically forwards thrown errors and rejected promises to the error-handling middleware. Do not wrap route handlers in try/catch.
+- **Integer ID parsing:** use `parseIntId(req.params.id, res)` from `server/src/lib/validate.ts` to parse and validate route params that are positive integer IDs. It writes a `400` response and returns `null` on failure — guard with `if (id === null) return;`.
 
 ## Authentication
 
@@ -152,6 +153,22 @@ Invoke it via the Agent tool with `subagent_type: "playwright-e2e-writer"` whene
 - Asks to change Playwright config, fixtures, page objects, or the test DB setup
 
 Brief the agent with: which flow(s) to cover, whether auth is required, any seeded data assumptions, and how to run/verify the tests. The agent will read the current code and existing tests itself — don't paste large code excerpts in the prompt.
+
+**E2E scope rule — only test what unit tests cannot:**
+
+E2E tests must cover only behaviour that requires a real browser, real API calls, or a real database:
+
+- Real network round-trips and database persistence (verify by reloading the page after a mutation)
+- Browser navigation (clicks on links, URL changes, back/forward)
+- Auth session identity flowing through to stored or displayed data (e.g. the signed-in user's name appearing after they submit)
+- Role-based access (agent vs. admin page access)
+
+Do **not** duplicate unit test coverage in E2E specs. The following belong in unit tests, not E2E:
+
+- Rendering of badges, labels, sender names, and timestamps
+- Empty states and loading skeletons
+- Button disabled/enabled state
+- Conditional rendering based on props
 
 ## Out of scope (v1)
 

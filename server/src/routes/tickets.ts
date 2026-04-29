@@ -1,8 +1,8 @@
 import { Router, type Request, type Response } from "express";
-import { createTicketSchema, updateTicketSchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, Role } from "@helpdesk/core";
+import { createTicketSchema, updateTicketSchema, createReplySchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, Role, SenderType } from "@helpdesk/core";
 import { type Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
-import { validate } from "../lib/validate.js";
+import { validate, parseIntId } from "../lib/validate.js";
 
 export const ticketsRouter = Router();
 
@@ -58,11 +58,8 @@ ticketsRouter.get("/agents", async (_req: Request, res: Response) => {
 });
 
 ticketsRouter.get("/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id <= 0) {
-    res.status(400).json({ error: "Invalid ticket ID" });
-    return;
-  }
+  const id = parseIntId(req.params.id, res);
+  if (id === null) return;
   const ticket = await prisma.ticket.findUnique({ where: { id } });
   if (!ticket) {
     res.status(404).json({ error: "Ticket not found" });
@@ -72,11 +69,8 @@ ticketsRouter.get("/:id", async (req: Request, res: Response) => {
 });
 
 ticketsRouter.patch("/:id", async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-  if (!Number.isInteger(id) || id <= 0) {
-    res.status(400).json({ error: "Invalid ticket ID" });
-    return;
-  }
+  const id = parseIntId(req.params.id, res);
+  if (id === null) return;
   const data = validate(updateTicketSchema, req.body, res);
   if (!data) return;
 
@@ -113,4 +107,42 @@ ticketsRouter.post("/", async (req: Request, res: Response) => {
   if (!data) return;
   const ticket = await prisma.ticket.create({ data });
   res.status(201).json({ ticket });
+});
+
+ticketsRouter.get("/:id/replies", async (req: Request, res: Response) => {
+  const id = parseIntId(req.params.id, res);
+  if (id === null) return;
+  const ticket = await prisma.ticket.findUnique({ where: { id } });
+  if (!ticket) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+  const replies = await prisma.ticketReply.findMany({
+    where: { ticketId: id },
+    include: { author: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+  res.json({ replies });
+});
+
+ticketsRouter.post("/:id/replies", async (req: Request, res: Response) => {
+  const id = parseIntId(req.params.id, res);
+  if (id === null) return;
+  const data = validate(createReplySchema, req.body, res);
+  if (!data) return;
+  const ticket = await prisma.ticket.findUnique({ where: { id } });
+  if (!ticket) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+  const reply = await prisma.ticketReply.create({
+    data: {
+      ticketId: id,
+      senderType: SenderType.agent,
+      authorId: res.locals.session.user.id,
+      body: data.body,
+    },
+    include: { author: { select: { id: true, name: true } } },
+  });
+  res.status(201).json({ reply });
 });

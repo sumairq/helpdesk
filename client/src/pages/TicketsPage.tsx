@@ -7,6 +7,7 @@ import { type TicketFilterValues, PAGE_SIZE } from "@helpdesk/core";
 import { TicketsFilters } from "@/components/TicketsFilters";
 import { TicketsTable, type Ticket } from "@/components/TicketsTable";
 import { TicketsPagination } from "@/components/TicketsPagination";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
 
 interface TicketsResponse {
   tickets: Ticket[];
@@ -87,11 +88,10 @@ export function TicketsPage() {
         onFiltersChange={handleFiltersChange}
       />
 
-      {error && (
-        <p className="text-destructive">
-          {axios.isAxiosError(error) ? (error.response?.data?.error ?? error.message) : "Failed to load tickets"}
-        </p>
-      )}
+      <ErrorMessage
+        variant="page"
+        message={error ? (axios.isAxiosError(error) ? (error.response?.data?.error ?? error.message) : "Failed to load tickets") : null}
+      />
 
       {!error && (
         <>

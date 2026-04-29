@@ -4,7 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { authClient } from "../auth-client";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -67,11 +67,7 @@ export function LoginPage() {
                   />
                 )}
               />
-              {errors.email && (
-                <p className="text-xs text-destructive">
-                  {errors.email.message}
-                </p>
-              )}
+              <ErrorMessage variant="field" message={errors.email?.message} />
             </div>
 
             <div className="flex flex-col gap-2">
@@ -89,18 +85,10 @@ export function LoginPage() {
                   />
                 )}
               />
-              {errors.password && (
-                <p className="text-xs text-destructive">
-                  {errors.password.message}
-                </p>
-              )}
+              <ErrorMessage variant="field" message={errors.password?.message} />
             </div>
 
-            {formError && (
-              <Alert variant="destructive">
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
-            )}
+            <ErrorMessage variant="alert" message={formError} />
 
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Signing in…" : "Sign in"}

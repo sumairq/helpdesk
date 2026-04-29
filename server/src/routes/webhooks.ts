@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { inboundEmailSchema, TicketStatus, SenderType } from "@helpdesk/core";
 import { prisma } from "../db.js";
 import { validate } from "../lib/validate.js";
+import { sanitizeHtml } from "../lib/sanitize.js";
 
 export const webhooksRouter = Router();
 
@@ -24,6 +25,7 @@ webhooksRouter.post("/email/inbound", async (_req: Request, res: Response) => {
         senderType: SenderType.customer,
         authorId: null,
         body: data.body,
+        ...(data.bodyHtml != null && { bodyHtml: sanitizeHtml(data.bodyHtml) }),
       },
     });
     res.status(200).json({ ticket: existing });
@@ -31,7 +33,11 @@ webhooksRouter.post("/email/inbound", async (_req: Request, res: Response) => {
   }
 
   const ticket = await prisma.ticket.create({
-    data: { ...data, status: TicketStatus.open },
+    data: {
+      ...data,
+      ...(data.bodyHtml != null && { bodyHtml: sanitizeHtml(data.bodyHtml) }),
+      status: TicketStatus.open,
+    },
   });
   res.status(201).json({ ticket });
 });

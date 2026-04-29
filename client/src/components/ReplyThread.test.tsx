@@ -7,6 +7,7 @@ const agentReply: TicketReply = {
   senderType: "agent",
   author: { id: "agent-1", name: "Alice Agent" },
   body: "We are looking into this.",
+  bodyHtml: null,
   createdAt: "2024-03-21T09:00:00.000Z",
 };
 
@@ -15,6 +16,7 @@ const customerReply: TicketReply = {
   senderType: "customer",
   author: null,
   body: "Any update on this?",
+  bodyHtml: null,
   createdAt: "2024-03-22T10:00:00.000Z",
 };
 

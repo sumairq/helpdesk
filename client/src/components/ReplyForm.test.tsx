@@ -13,6 +13,7 @@ const mockReply: TicketReply = {
   senderType: "agent",
   author: { id: "agent-1", name: "Alice Agent" },
   body: "Here is our response.",
+  bodyHtml: null,
   createdAt: "2024-03-21T10:00:00.000Z",
 };
 

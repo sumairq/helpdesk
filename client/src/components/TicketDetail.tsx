@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { TicketStatus, statusLabels, categoryLabels, type Ticket } from "@helpdesk/core";
 
 const statusStyles: Record<TicketStatus, string> = {
@@ -65,7 +66,7 @@ export function TicketDetail({ ticket }: Props) {
           {ticket.bodyHtml ? (
             <div
               className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: ticket.bodyHtml }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(ticket.bodyHtml) }}
             />
           ) : (
             <pre className="whitespace-pre-wrap text-sm font-sans leading-relaxed">{ticket.body}</pre>

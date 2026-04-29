@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export interface TicketReply {
@@ -5,6 +6,7 @@ export interface TicketReply {
   senderType: "agent" | "customer";
   author: { id: string; name: string } | null;
   body: string;
+  bodyHtml: string | null;
   createdAt: string;
 }
 
@@ -60,9 +62,16 @@ export function ReplyThread({ replies, isLoading }: Props) {
                   {new Date(reply.createdAt).toLocaleString()}
                 </span>
               </div>
-              <pre className="whitespace-pre-wrap font-sans leading-relaxed">
-                {reply.body}
-              </pre>
+              {reply.bodyHtml ? (
+                <div
+                  className="prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(reply.bodyHtml) }}
+                />
+              ) : (
+                <pre className="whitespace-pre-wrap font-sans leading-relaxed">
+                  {reply.body}
+                </pre>
+              )}
             </div>
           </div>
         );

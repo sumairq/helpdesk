@@ -3,6 +3,7 @@ import { createTicketSchema, updateTicketSchema, createReplySchema, ticketSortSc
 import { type Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
 import { validate, parseIntId } from "../lib/validate.js";
+import { sanitizeHtml } from "../lib/sanitize.js";
 
 export const ticketsRouter = Router();
 
@@ -105,7 +106,12 @@ ticketsRouter.patch("/:id", async (req: Request, res: Response) => {
 ticketsRouter.post("/", async (req: Request, res: Response) => {
   const data = validate(createTicketSchema, req.body, res);
   if (!data) return;
-  const ticket = await prisma.ticket.create({ data });
+  const ticket = await prisma.ticket.create({
+    data: {
+      ...data,
+      ...(data.bodyHtml != null && { bodyHtml: sanitizeHtml(data.bodyHtml) }),
+    },
+  });
   res.status(201).json({ ticket });
 });
 
@@ -141,6 +147,7 @@ ticketsRouter.post("/:id/replies", async (req: Request, res: Response) => {
       senderType: SenderType.agent,
       authorId: res.locals.session.user.id,
       body: data.body,
+      ...(data.bodyHtml != null && { bodyHtml: sanitizeHtml(data.bodyHtml) }),
     },
     include: { author: { select: { id: true, name: true } } },
   });

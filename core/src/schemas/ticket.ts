@@ -3,8 +3,8 @@ import { TicketCategory, TicketStatus } from "../enums.js";
 
 export const ticketFilterSchema = z.object({
   search:   z.string().optional(),
-  status:   z.nativeEnum(TicketStatus).optional(),
-  category: z.union([z.nativeEnum(TicketCategory), z.literal("uncategorised")]).optional(),
+  status:   z.enum(TicketStatus).optional(),
+  category: z.union([z.enum(TicketCategory), z.literal("uncategorised")]).optional(),
 });
 
 export type TicketFilterValues = z.infer<typeof ticketFilterSchema>;
@@ -44,14 +44,16 @@ export const createTicketSchema = z.object({
   bodyHtml:     z.string().optional(),
   senderEmail:  z.string().min(1, "Email is required").check(z.email()),
   senderName:   z.string().trim().min(1, "Name is required"),
-  category:     z.nativeEnum(TicketCategory).optional(),
+  category:     z.enum(TicketCategory).optional(),
   assignedToId: z.string().optional(),
 });
 
 export type CreateTicketValues = z.infer<typeof createTicketSchema>;
 
-export const assignTicketSchema = z.object({
-  assignedToId: z.string().nullable(),
+export const updateTicketSchema = z.object({
+  assignedToId: z.string().nullable().optional(),
+  status: z.enum(TicketStatus).optional(),
+  category: z.enum(TicketCategory).nullable().optional(),
 });
 
-export type AssignTicketValues = z.infer<typeof assignTicketSchema>;
+export type UpdateTicketValues = z.infer<typeof updateTicketSchema>;

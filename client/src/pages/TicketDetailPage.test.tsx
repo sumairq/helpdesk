@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent, within } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import axios from "axios";
@@ -15,7 +15,7 @@ vi.mock("@/components/ui/select", async () => {
   const Ctx = createContext<((v: string) => void) | undefined>(undefined);
 
   return {
-    Select({ value, onValueChange, children, disabled }: any) {
+    Select({ onValueChange, children }: any) {
       return <Ctx.Provider value={onValueChange}>{children}</Ctx.Provider>;
     },
     SelectTrigger({ children }: any) { return <>{children}</>; },
@@ -37,7 +37,19 @@ const mockAgents = [
   { id: "agent-2", name: "Bob Agent", email: "bob@helpdesk.com" },
 ];
 
-const mockTicket = {
+const mockTicket: {
+  id: number;
+  subject: string;
+  body: string;
+  bodyHtml: string | null;
+  senderName: string;
+  senderEmail: string;
+  status: TicketStatus;
+  category: TicketCategory | null;
+  assignedToId: string | null;
+  createdAt: string;
+  updatedAt: string;
+} = {
   id: 1,
   subject: "Laptop screen broken",
   body: "The screen cracked after I dropped it.",
@@ -76,6 +88,12 @@ function setupMocks(
     if (url === "/api/tickets/agents") return Promise.resolve({ data: { agents } });
     return Promise.reject(new Error(`Unexpected GET: ${url}`));
   });
+}
+
+// Returns the <dd> element for the metadata field with the given label.
+function getFieldDd(label: string): HTMLElement {
+  const dt = screen.getByText(label, { selector: "dt" });
+  return dt.nextElementSibling as HTMLElement;
 }
 
 beforeEach(() => {
@@ -143,14 +161,14 @@ describe("TicketDetailPage", () => {
   it("renders the status badge", async () => {
     renderDetailPage();
     await waitFor(() => {
-      expect(screen.getByText(TicketStatus.open)).toBeInTheDocument();
+      expect(screen.getByTestId("status-badge")).toHaveTextContent("Open");
     });
   });
 
   it("renders the category badge", async () => {
     renderDetailPage();
     await waitFor(() => {
-      expect(screen.getByText("Technical")).toBeInTheDocument();
+      expect(screen.getByTestId("category-badge")).toHaveTextContent("Technical");
     });
   });
 
@@ -158,7 +176,7 @@ describe("TicketDetailPage", () => {
     setupMocks({ ...mockTicket, category: null });
     renderDetailPage();
     await waitFor(() => screen.getByRole("heading", { name: mockTicket.subject }));
-    expect(screen.queryByText("Technical")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("category-badge")).not.toBeInTheDocument();
   });
 
   // --- Metadata fields ---
@@ -182,7 +200,7 @@ describe("TicketDetailPage", () => {
   it("shows 'Unassigned' in the assign trigger when ticket has no agent", async () => {
     renderDetailPage();
     await waitFor(() => {
-      expect(screen.getByTestId("select-value")).toHaveTextContent("Unassigned");
+      expect(within(getFieldDd("Assigned to")).getByTestId("select-value")).toHaveTextContent("Unassigned");
     });
   });
 
@@ -190,7 +208,7 @@ describe("TicketDetailPage", () => {
     setupMocks({ ...mockTicket, assignedToId: "agent-1" });
     renderDetailPage();
     await waitFor(() => {
-      expect(screen.getByTestId("select-value")).toHaveTextContent("Alice Agent");
+      expect(within(getFieldDd("Assigned to")).getByTestId("select-value")).toHaveTextContent("Alice Agent");
     });
   });
 
@@ -198,7 +216,7 @@ describe("TicketDetailPage", () => {
     setupMocks({ ...mockTicket, assignedToId: "does-not-exist" });
     renderDetailPage();
     await waitFor(() => {
-      expect(screen.getByTestId("select-value")).toHaveTextContent("Unknown agent");
+      expect(within(getFieldDd("Assigned to")).getByTestId("select-value")).toHaveTextContent("Unknown agent");
     });
   });
 
@@ -209,7 +227,7 @@ describe("TicketDetailPage", () => {
     renderDetailPage();
     await waitFor(() => screen.getByRole("heading", { name: mockTicket.subject }));
 
-    fireEvent.click(screen.getByRole("option", { name: "Alice Agent" }));
+    fireEvent.click(within(getFieldDd("Assigned to")).getByRole("option", { name: "Alice Agent" }));
 
     await waitFor(() => {
       expect(mockedAxios.patch).toHaveBeenCalledWith(
@@ -227,10 +245,10 @@ describe("TicketDetailPage", () => {
     });
     renderDetailPage();
     await waitFor(() =>
-      expect(screen.getByTestId("select-value")).toHaveTextContent("Alice Agent"),
+      expect(within(getFieldDd("Assigned to")).getByTestId("select-value")).toHaveTextContent("Alice Agent"),
     );
 
-    fireEvent.click(screen.getByRole("option", { name: "Unassigned" }));
+    fireEvent.click(within(getFieldDd("Assigned to")).getByRole("option", { name: "Unassigned" }));
 
     await waitFor(() => {
       expect(mockedAxios.patch).toHaveBeenCalledWith(
@@ -248,10 +266,10 @@ describe("TicketDetailPage", () => {
     renderDetailPage();
     await waitFor(() => screen.getByRole("heading", { name: mockTicket.subject }));
 
-    fireEvent.click(screen.getByRole("option", { name: "Alice Agent" }));
+    fireEvent.click(within(getFieldDd("Assigned to")).getByRole("option", { name: "Alice Agent" }));
 
     await waitFor(() => {
-      expect(screen.getByTestId("select-value")).toHaveTextContent("Alice Agent");
+      expect(within(getFieldDd("Assigned to")).getByTestId("select-value")).toHaveTextContent("Alice Agent");
     });
   });
 

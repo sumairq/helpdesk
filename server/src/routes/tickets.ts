@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { createTicketSchema, assignTicketSchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, Role } from "@helpdesk/core";
+import { createTicketSchema, updateTicketSchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, Role } from "@helpdesk/core";
 import { type Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
 import { validate } from "../lib/validate.js";
@@ -77,7 +77,7 @@ ticketsRouter.patch("/:id", async (req: Request, res: Response) => {
     res.status(400).json({ error: "Invalid ticket ID" });
     return;
   }
-  const data = validate(assignTicketSchema, req.body, res);
+  const data = validate(updateTicketSchema, req.body, res);
   if (!data) return;
 
   const ticket = await prisma.ticket.findUnique({ where: { id } });
@@ -86,7 +86,7 @@ ticketsRouter.patch("/:id", async (req: Request, res: Response) => {
     return;
   }
 
-  if (data.assignedToId !== null) {
+  if (data.assignedToId != null) {
     const agent = await prisma.user.findFirst({
       where: { id: data.assignedToId, role: Role.AGENT, deletedAt: null },
     });
@@ -98,7 +98,12 @@ ticketsRouter.patch("/:id", async (req: Request, res: Response) => {
 
   const updated = await prisma.ticket.update({
     where: { id },
-    data: { assignedToId: data.assignedToId, updatedAt: new Date() },
+    data: {
+      ...("assignedToId" in data && { assignedToId: data.assignedToId }),
+      ...("status"       in data && { status:       data.status }),
+      ...("category"     in data && { category:     data.category }),
+      updatedAt: new Date(),
+    },
   });
   res.json({ ticket: updated });
 });

@@ -120,6 +120,10 @@ usersRouter.delete("/:id", async (req: Request<{ id: string }>, res: Response) =
     return;
   }
   await prisma.$transaction([
+    prisma.ticket.updateMany({
+      where: { assignedToId: req.params.id },
+      data: { assignedToId: null },
+    }),
     prisma.user.update({
       where: { id: req.params.id },
       data: { deletedAt: new Date() },

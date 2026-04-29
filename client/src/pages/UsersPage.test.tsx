@@ -206,7 +206,9 @@ describe("UsersPage", () => {
   it("creates a user, closes the modal, and refetches on success", async () => {
     const user = userEvent.setup();
     mockedAxios.get.mockResolvedValue({ data: { users: mockUsers } });
-    mockedAxios.post.mockResolvedValue({ data: {} });
+    mockedAxios.post.mockResolvedValue({
+      data: { user: { id: "carol-id", name: "Carol Agent", email: "carol@helpdesk.local", role: Role.AGENT, deletedAt: null } },
+    });
     renderWithQuery(<UsersPage />);
     await waitFor(() => screen.getByRole("button", { name: "New User" }));
     await user.click(screen.getByRole("button", { name: "New User" }));
@@ -222,7 +224,7 @@ describe("UsersPage", () => {
       { name: "Carol Agent", email: "carol@helpdesk.local", password: "supersecret123" },
       { withCredentials: true },
     );
-    expect(mockedAxios.get).toHaveBeenCalledTimes(2);
+    expect(mockedAxios.get).toHaveBeenCalledTimes(1);
   });
 
   it("does not show a delete button for ADMIN users", async () => {

@@ -1,9 +1,16 @@
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeftIcon } from "lucide-react";
 import { TicketStatus, TicketCategory } from "@helpdesk/core";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TicketDetail {
   id: number;
@@ -17,6 +24,12 @@ interface TicketDetail {
   assignedToId: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  email: string;
 }
 
 const statusStyles: Record<TicketStatus, string> = {
@@ -38,14 +51,43 @@ async function fetchTicket(id: number): Promise<TicketDetail> {
   return res.data.ticket;
 }
 
+async function fetchAgents(): Promise<Agent[]> {
+  const res = await axios.get<{ agents: Agent[] }>("/api/tickets/agents", {
+    withCredentials: true,
+  });
+  return res.data.agents;
+}
+
+async function assignTicket(ticketId: number, assignedToId: string | null): Promise<TicketDetail> {
+  const res = await axios.patch<{ ticket: TicketDetail }>(
+    `/api/tickets/${ticketId}`,
+    { assignedToId },
+    { withCredentials: true },
+  );
+  return res.data.ticket;
+}
+
 export function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
   const ticketId = Number(id);
+  const queryClient = useQueryClient();
 
   const { data: ticket, isPending, error } = useQuery({
     queryKey: ["ticket", ticketId],
     queryFn: () => fetchTicket(ticketId),
     enabled: Number.isInteger(ticketId) && ticketId > 0,
+  });
+
+  const { data: agents = [] } = useQuery({
+    queryKey: ["agents"],
+    queryFn: fetchAgents,
+  });
+
+  const { mutate: assign, isPending: isAssigning } = useMutation({
+    mutationFn: (assignedToId: string | null) => assignTicket(ticketId, assignedToId),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["ticket", ticketId], updated);
+    },
   });
 
   return (
@@ -115,10 +157,30 @@ export function TicketDetailPage() {
                 <span className="font-normal text-muted-foreground">&lt;{ticket.senderEmail}&gt;</span>
               </dd>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
               <dt className="w-24 shrink-0 text-muted-foreground">Assigned to</dt>
-              <dd className={ticket.assignedToId ? undefined : "text-muted-foreground"}>
-                {ticket.assignedToId ?? "Unassigned"}
+              <dd>
+                <Select
+                  value={ticket.assignedToId ?? ""}
+                  onValueChange={(val) => assign(val === "" ? null : val)}
+                  disabled={isAssigning}
+                >
+                  <SelectTrigger size="sm" className="w-44">
+                    <SelectValue>
+                      {ticket.assignedToId
+                        ? (agents.find((a) => a.id === ticket.assignedToId)?.name ?? "Unknown agent")
+                        : "Unassigned"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Unassigned</SelectItem>
+                    {agents.map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id}>
+                        {agent.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </dd>
             </div>
             <div className="flex gap-4">

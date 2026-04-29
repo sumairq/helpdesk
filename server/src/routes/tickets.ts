@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { createTicketSchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema } from "@helpdesk/core";
+import { createTicketSchema, assignTicketSchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, Role } from "@helpdesk/core";
 import { type Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
 import { validate } from "../lib/validate.js";
@@ -48,6 +48,15 @@ ticketsRouter.get("/", async (req: Request, res: Response) => {
   res.json({ tickets, total, page: pagination.page, pageSize: pagination.pageSize });
 });
 
+ticketsRouter.get("/agents", async (_req: Request, res: Response) => {
+  const agents = await prisma.user.findMany({
+    where: { role: Role.AGENT, deletedAt: null },
+    select: { id: true, name: true, email: true },
+    orderBy: { name: "asc" },
+  });
+  res.json({ agents });
+});
+
 ticketsRouter.get("/:id", async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
@@ -60,6 +69,38 @@ ticketsRouter.get("/:id", async (req: Request, res: Response) => {
     return;
   }
   res.json({ ticket });
+});
+
+ticketsRouter.patch("/:id", async (req: Request, res: Response) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    res.status(400).json({ error: "Invalid ticket ID" });
+    return;
+  }
+  const data = validate(assignTicketSchema, req.body, res);
+  if (!data) return;
+
+  const ticket = await prisma.ticket.findUnique({ where: { id } });
+  if (!ticket) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+
+  if (data.assignedToId !== null) {
+    const agent = await prisma.user.findFirst({
+      where: { id: data.assignedToId, role: Role.AGENT, deletedAt: null },
+    });
+    if (!agent) {
+      res.status(400).json({ error: "Agent not found" });
+      return;
+    }
+  }
+
+  const updated = await prisma.ticket.update({
+    where: { id },
+    data: { assignedToId: data.assignedToId, updatedAt: new Date() },
+  });
+  res.json({ ticket: updated });
 });
 
 ticketsRouter.post("/", async (req: Request, res: Response) => {

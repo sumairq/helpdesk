@@ -49,3 +49,9 @@ export const createTicketSchema = z.object({
 });
 
 export type CreateTicketValues = z.infer<typeof createTicketSchema>;
+
+export const assignTicketSchema = z.object({
+  assignedToId: z.string().nullable(),
+});
+
+export type AssignTicketValues = z.infer<typeof assignTicketSchema>;

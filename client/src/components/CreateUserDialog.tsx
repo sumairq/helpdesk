@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { flushSync } from "react-dom";
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserSchema, type CreateUserValues } from "@helpdesk/core";
+import { type User } from "@/components/UsersTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +18,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-async function createUser(values: CreateUserValues): Promise<void> {
-  await axios.post("/api/users", values, { withCredentials: true });
+async function createUser(values: CreateUserValues): Promise<User> {
+  const res = await axios.post<{ user: User }>("/api/users", values, { withCredentials: true });
+  return res.data.user;
 }
 
 interface CreateUserDialogProps {
@@ -41,10 +44,13 @@ export function CreateUserDialog({ open, onOpenChange }: CreateUserDialogProps) 
 
   const mutation = useMutation({
     mutationFn: createUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      onOpenChange(false);
-      reset();
+    onSuccess: (newUser) => {
+      flushSync(() => {
+        onOpenChange(false);
+        reset();
+      });
+      queryClient.setQueryData<User[]>(["users"], (old = []) => [...old, newUser]);
+      queryClient.invalidateQueries({ queryKey: ["agents"] });
     },
     onError: (err) => {
       const message = axios.isAxiosError(err)

@@ -3,6 +3,7 @@ import { inboundEmailSchema, TicketStatus, SenderType } from "@helpdesk/core";
 import { prisma } from "../db.js";
 import { validate } from "../lib/validate.js";
 import { sanitizeHtml } from "../lib/sanitize.js";
+import { classifyTicket } from "../services/ai.js";
 
 export const webhooksRouter = Router();
 
@@ -40,4 +41,8 @@ webhooksRouter.post("/email/inbound", async (_req: Request, res: Response) => {
     },
   });
   res.status(201).json({ ticket });
+
+  classifyTicket(ticket)
+    .then((category) => prisma.ticket.update({ where: { id: ticket.id }, data: { category } }))
+    .catch(() => {});
 });

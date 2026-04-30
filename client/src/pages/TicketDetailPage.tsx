@@ -9,6 +9,7 @@ import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { type Ticket } from "@helpdesk/core";
 import { TicketDetail } from "@/components/TicketDetail";
 import { UpdateTicket } from "@/components/UpdateTicket";
+import { TicketSummary } from "@/components/TicketSummary";
 
 async function fetchTicket(id: number): Promise<Ticket> {
   const res = await axios.get<{ ticket: Ticket }>(`/api/tickets/${id}`, {
@@ -58,6 +59,10 @@ export function TicketDetailPage() {
           {/* Left column — main content */}
           <div className="flex-1 min-w-0 space-y-8">
             <TicketDetail ticket={ticket} />
+
+            <hr className="border-border" />
+
+            <TicketSummary ticketId={ticketId} />
 
             <hr className="border-border" />
 

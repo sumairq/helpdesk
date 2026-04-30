@@ -4,7 +4,7 @@ import { type Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
 import { validate, parseIntId } from "../lib/validate.js";
 import { sanitizeHtml } from "../lib/sanitize.js";
-import { polishReplyText } from "../services/ai.js";
+import { polishReplyText, summarizeTicket } from "../services/ai.js";
 
 export const ticketsRouter = Router();
 
@@ -149,6 +149,26 @@ ticketsRouter.post("/:id/polish", async (req: Request, res: Response) => {
   const customerFirstName = ticket.senderName.split(" ")[0];
   const polished = await polishReplyText(data.body);
   res.json({ polished: `Hello ${customerFirstName},\n\n${polished}\n\nBest regards,\n${agentName}` });
+});
+
+ticketsRouter.post("/:id/summarize", async (req: Request, res: Response) => {
+  const id = parseIntId(req.params.id, res);
+  if (id === null) return;
+
+  const ticket = await prisma.ticket.findUnique({ where: { id } });
+  if (!ticket) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+
+  const replies = await prisma.ticketReply.findMany({
+    where: { ticketId: id },
+    select: { senderType: true, body: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const summary = await summarizeTicket(ticket.subject, ticket.body, replies);
+  res.json({ summary });
 });
 
 ticketsRouter.post("/:id/replies", async (req: Request, res: Response) => {

@@ -19,8 +19,18 @@ async function postReply(ticketId: number, body: string): Promise<TicketReply> {
   return res.data.reply;
 }
 
+async function postPolish(ticketId: number, body: string): Promise<string> {
+  const res = await axios.post<{ polished: string }>(
+    `/api/tickets/${ticketId}/polish`,
+    { body },
+    { withCredentials: true },
+  );
+  return res.data.polished;
+}
+
 export function ReplyForm({ ticketId, onSuccess }: Props) {
   const [body, setBody] = useState("");
+  const [polishError, setPolishError] = useState<string | null>(null);
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: () => postReply(ticketId, body),
@@ -30,11 +40,29 @@ export function ReplyForm({ ticketId, onSuccess }: Props) {
     },
   });
 
+  const { mutate: polish, isPending: isPolishing } = useMutation({
+    mutationFn: () => postPolish(ticketId, body),
+    onSuccess: (polished) => {
+      setBody(polished);
+      setPolishError(null);
+    },
+    onError: (err) => {
+      setPolishError(
+        axios.isAxiosError(err)
+          ? (err.response?.data?.error ?? err.message)
+          : "Failed to polish reply",
+      );
+    },
+  });
+
   const errorMessage = error
     ? axios.isAxiosError(error)
       ? (error.response?.data?.error ?? error.message)
       : "Failed to send reply"
     : null;
+
+  const isBodyEmpty = body.trim().length === 0;
+  const isDisabled = isPending || isPolishing;
 
   return (
     <div className="space-y-3">
@@ -45,14 +73,25 @@ export function ReplyForm({ ticketId, onSuccess }: Props) {
         placeholder="Write a reply…"
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        disabled={isPending}
+        disabled={isDisabled}
       />
-      <ErrorMessage message={errorMessage} />
-      <div className="flex justify-end">
+      <ErrorMessage message={errorMessage ?? polishError} />
+      <div className="flex justify-end gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setPolishError(null);
+            polish();
+          }}
+          disabled={isDisabled || isBodyEmpty}
+        >
+          {isPolishing ? "Polishing…" : "Polish"}
+        </Button>
         <Button
           size="sm"
           onClick={() => mutate()}
-          disabled={isPending || body.trim().length === 0}
+          disabled={isDisabled || isBodyEmpty}
         >
           {isPending ? "Sending…" : "Send reply"}
         </Button>

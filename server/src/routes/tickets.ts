@@ -1,9 +1,10 @@
 import { Router, type Request, type Response } from "express";
-import { createTicketSchema, updateTicketSchema, createReplySchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, Role, SenderType } from "@helpdesk/core";
+import { createTicketSchema, updateTicketSchema, createReplySchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, polishReplySchema, Role, SenderType } from "@helpdesk/core";
 import { type Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
 import { validate, parseIntId } from "../lib/validate.js";
 import { sanitizeHtml } from "../lib/sanitize.js";
+import { polishReplyText } from "../services/ai.js";
 
 export const ticketsRouter = Router();
 
@@ -129,6 +130,25 @@ ticketsRouter.get("/:id/replies", async (req: Request, res: Response) => {
     orderBy: { createdAt: "asc" },
   });
   res.json({ replies });
+});
+
+ticketsRouter.post("/:id/polish", async (req: Request, res: Response) => {
+  const id = parseIntId(req.params.id, res);
+  if (id === null) return;
+
+  const data = validate(polishReplySchema, req.body, res);
+  if (!data) return;
+
+  const ticket = await prisma.ticket.findUnique({ where: { id } });
+  if (!ticket) {
+    res.status(404).json({ error: "Ticket not found" });
+    return;
+  }
+
+  const agentName = res.locals.session.user.name;
+  const customerFirstName = ticket.senderName.split(" ")[0];
+  const polished = await polishReplyText(data.body);
+  res.json({ polished: `Hello ${customerFirstName},\n\n${polished}\n\nBest regards,\n${agentName}` });
 });
 
 ticketsRouter.post("/:id/replies", async (req: Request, res: Response) => {

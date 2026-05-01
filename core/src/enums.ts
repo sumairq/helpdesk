@@ -4,9 +4,11 @@ export enum Role {
 }
 
 export enum TicketStatus {
-  open = "open",
-  resolved = "resolved",
-  closed = "closed",
+  new        = "new",
+  open       = "open",
+  processing = "processing",
+  resolved   = "resolved",
+  closed     = "closed",
 }
 
 export enum TicketCategory {

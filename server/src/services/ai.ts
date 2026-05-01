@@ -1,7 +1,15 @@
+import { readFileSync } from "fs";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { TicketCategory } from "@helpdesk/core";
 import { type Ticket } from "../generated/prisma/client.js";
+
+const knowledgeBase = readFileSync(
+  resolve(dirname(fileURLToPath(import.meta.url)), "../../knowledge-base.md"),
+  "utf-8",
+);
 
 export async function polishReplyText(body: string): Promise<string> {
   const { text } = await generateText({
@@ -24,6 +32,27 @@ export async function classifyTicket(ticket: Pick<Ticket, "subject" | "body">): 
   const trimmed = text.trim() as TicketCategory;
   if (Object.values(TicketCategory).includes(trimmed)) return trimmed;
   return TicketCategory.general_question;
+}
+
+export async function tryAutoResolve(
+  ticket: Pick<Ticket, "subject" | "body" | "senderName">,
+): Promise<{ resolved: boolean; reply: string | null }> {
+  const { text } = await generateText({
+    model: openai("gpt-5.4-mini"),
+    system: `You are a helpdesk AI. Use the knowledge base below to answer customer questions.\n\n${knowledgeBase}\n\nDo NOT answer questions that require account-specific lookups, or that match any escalation rule in section 10.\n\nRespond ONLY with a single-line JSON object:\n{"canAnswer": true, "reply": "answer body only — no greeting, no sign-off"}\nor\n{"canAnswer": false}`,
+    prompt: `Subject: ${ticket.subject}\n\n${ticket.body}`,
+  });
+  try {
+    const parsed: { canAnswer: boolean; reply?: string } = JSON.parse(text.trim());
+    if (!parsed.canAnswer || !parsed.reply) return { resolved: false, reply: null };
+    const firstName = ticket.senderName.split(" ")[0];
+    return {
+      resolved: true,
+      reply: `Hello ${firstName},\n\n${parsed.reply}\n\nBest regards,\nSupport Team`,
+    };
+  } catch {
+    return { resolved: false, reply: null };
+  }
 }
 
 interface ReplyForSummary {

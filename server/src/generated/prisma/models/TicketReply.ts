@@ -42,6 +42,7 @@ export type TicketReplyMinAggregateOutputType = {
   senderType: $Enums.SenderType | null
   authorId: string | null
   body: string | null
+  bodyHtml: string | null
   createdAt: Date | null
 }
 
@@ -51,6 +52,7 @@ export type TicketReplyMaxAggregateOutputType = {
   senderType: $Enums.SenderType | null
   authorId: string | null
   body: string | null
+  bodyHtml: string | null
   createdAt: Date | null
 }
 
@@ -60,6 +62,7 @@ export type TicketReplyCountAggregateOutputType = {
   senderType: number
   authorId: number
   body: number
+  bodyHtml: number
   createdAt: number
   _all: number
 }
@@ -81,6 +84,7 @@ export type TicketReplyMinAggregateInputType = {
   senderType?: true
   authorId?: true
   body?: true
+  bodyHtml?: true
   createdAt?: true
 }
 
@@ -90,6 +94,7 @@ export type TicketReplyMaxAggregateInputType = {
   senderType?: true
   authorId?: true
   body?: true
+  bodyHtml?: true
   createdAt?: true
 }
 
@@ -99,6 +104,7 @@ export type TicketReplyCountAggregateInputType = {
   senderType?: true
   authorId?: true
   body?: true
+  bodyHtml?: true
   createdAt?: true
   _all?: true
 }
@@ -195,6 +201,7 @@ export type TicketReplyGroupByOutputType = {
   senderType: $Enums.SenderType
   authorId: string | null
   body: string
+  bodyHtml: string | null
   createdAt: Date
   _count: TicketReplyCountAggregateOutputType | null
   _avg: TicketReplyAvgAggregateOutputType | null
@@ -227,6 +234,7 @@ export type TicketReplyWhereInput = {
   senderType?: Prisma.EnumSenderTypeFilter<"TicketReply"> | $Enums.SenderType
   authorId?: Prisma.StringNullableFilter<"TicketReply"> | string | null
   body?: Prisma.StringFilter<"TicketReply"> | string
+  bodyHtml?: Prisma.StringNullableFilter<"TicketReply"> | string | null
   createdAt?: Prisma.DateTimeFilter<"TicketReply"> | Date | string
   ticket?: Prisma.XOR<Prisma.TicketScalarRelationFilter, Prisma.TicketWhereInput>
   author?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -238,6 +246,7 @@ export type TicketReplyOrderByWithRelationInput = {
   senderType?: Prisma.SortOrder
   authorId?: Prisma.SortOrderInput | Prisma.SortOrder
   body?: Prisma.SortOrder
+  bodyHtml?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   ticket?: Prisma.TicketOrderByWithRelationInput
   author?: Prisma.UserOrderByWithRelationInput
@@ -252,6 +261,7 @@ export type TicketReplyWhereUniqueInput = Prisma.AtLeast<{
   senderType?: Prisma.EnumSenderTypeFilter<"TicketReply"> | $Enums.SenderType
   authorId?: Prisma.StringNullableFilter<"TicketReply"> | string | null
   body?: Prisma.StringFilter<"TicketReply"> | string
+  bodyHtml?: Prisma.StringNullableFilter<"TicketReply"> | string | null
   createdAt?: Prisma.DateTimeFilter<"TicketReply"> | Date | string
   ticket?: Prisma.XOR<Prisma.TicketScalarRelationFilter, Prisma.TicketWhereInput>
   author?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
@@ -263,6 +273,7 @@ export type TicketReplyOrderByWithAggregationInput = {
   senderType?: Prisma.SortOrder
   authorId?: Prisma.SortOrderInput | Prisma.SortOrder
   body?: Prisma.SortOrder
+  bodyHtml?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.TicketReplyCountOrderByAggregateInput
   _avg?: Prisma.TicketReplyAvgOrderByAggregateInput
@@ -280,12 +291,14 @@ export type TicketReplyScalarWhereWithAggregatesInput = {
   senderType?: Prisma.EnumSenderTypeWithAggregatesFilter<"TicketReply"> | $Enums.SenderType
   authorId?: Prisma.StringNullableWithAggregatesFilter<"TicketReply"> | string | null
   body?: Prisma.StringWithAggregatesFilter<"TicketReply"> | string
+  bodyHtml?: Prisma.StringNullableWithAggregatesFilter<"TicketReply"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"TicketReply"> | Date | string
 }
 
 export type TicketReplyCreateInput = {
   senderType: $Enums.SenderType
   body: string
+  bodyHtml?: string | null
   createdAt?: Date | string
   ticket: Prisma.TicketCreateNestedOneWithoutRepliesInput
   author?: Prisma.UserCreateNestedOneWithoutRepliesInput
@@ -297,12 +310,14 @@ export type TicketReplyUncheckedCreateInput = {
   senderType: $Enums.SenderType
   authorId?: string | null
   body: string
+  bodyHtml?: string | null
   createdAt?: Date | string
 }
 
 export type TicketReplyUpdateInput = {
   senderType?: Prisma.EnumSenderTypeFieldUpdateOperationsInput | $Enums.SenderType
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  bodyHtml?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ticket?: Prisma.TicketUpdateOneRequiredWithoutRepliesNestedInput
   author?: Prisma.UserUpdateOneWithoutRepliesNestedInput
@@ -314,6 +329,7 @@ export type TicketReplyUncheckedUpdateInput = {
   senderType?: Prisma.EnumSenderTypeFieldUpdateOperationsInput | $Enums.SenderType
   authorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  bodyHtml?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -323,12 +339,14 @@ export type TicketReplyCreateManyInput = {
   senderType: $Enums.SenderType
   authorId?: string | null
   body: string
+  bodyHtml?: string | null
   createdAt?: Date | string
 }
 
 export type TicketReplyUpdateManyMutationInput = {
   senderType?: Prisma.EnumSenderTypeFieldUpdateOperationsInput | $Enums.SenderType
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  bodyHtml?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -338,6 +356,7 @@ export type TicketReplyUncheckedUpdateManyInput = {
   senderType?: Prisma.EnumSenderTypeFieldUpdateOperationsInput | $Enums.SenderType
   authorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  bodyHtml?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -357,6 +376,7 @@ export type TicketReplyCountOrderByAggregateInput = {
   senderType?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   body?: Prisma.SortOrder
+  bodyHtml?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -371,6 +391,7 @@ export type TicketReplyMaxOrderByAggregateInput = {
   senderType?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   body?: Prisma.SortOrder
+  bodyHtml?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -380,6 +401,7 @@ export type TicketReplyMinOrderByAggregateInput = {
   senderType?: Prisma.SortOrder
   authorId?: Prisma.SortOrder
   body?: Prisma.SortOrder
+  bodyHtml?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -479,6 +501,7 @@ export type EnumSenderTypeFieldUpdateOperationsInput = {
 export type TicketReplyCreateWithoutAuthorInput = {
   senderType: $Enums.SenderType
   body: string
+  bodyHtml?: string | null
   createdAt?: Date | string
   ticket: Prisma.TicketCreateNestedOneWithoutRepliesInput
 }
@@ -488,6 +511,7 @@ export type TicketReplyUncheckedCreateWithoutAuthorInput = {
   ticketId: number
   senderType: $Enums.SenderType
   body: string
+  bodyHtml?: string | null
   createdAt?: Date | string
 }
 
@@ -526,12 +550,14 @@ export type TicketReplyScalarWhereInput = {
   senderType?: Prisma.EnumSenderTypeFilter<"TicketReply"> | $Enums.SenderType
   authorId?: Prisma.StringNullableFilter<"TicketReply"> | string | null
   body?: Prisma.StringFilter<"TicketReply"> | string
+  bodyHtml?: Prisma.StringNullableFilter<"TicketReply"> | string | null
   createdAt?: Prisma.DateTimeFilter<"TicketReply"> | Date | string
 }
 
 export type TicketReplyCreateWithoutTicketInput = {
   senderType: $Enums.SenderType
   body: string
+  bodyHtml?: string | null
   createdAt?: Date | string
   author?: Prisma.UserCreateNestedOneWithoutRepliesInput
 }
@@ -541,6 +567,7 @@ export type TicketReplyUncheckedCreateWithoutTicketInput = {
   senderType: $Enums.SenderType
   authorId?: string | null
   body: string
+  bodyHtml?: string | null
   createdAt?: Date | string
 }
 
@@ -575,12 +602,14 @@ export type TicketReplyCreateManyAuthorInput = {
   ticketId: number
   senderType: $Enums.SenderType
   body: string
+  bodyHtml?: string | null
   createdAt?: Date | string
 }
 
 export type TicketReplyUpdateWithoutAuthorInput = {
   senderType?: Prisma.EnumSenderTypeFieldUpdateOperationsInput | $Enums.SenderType
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  bodyHtml?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ticket?: Prisma.TicketUpdateOneRequiredWithoutRepliesNestedInput
 }
@@ -590,6 +619,7 @@ export type TicketReplyUncheckedUpdateWithoutAuthorInput = {
   ticketId?: Prisma.IntFieldUpdateOperationsInput | number
   senderType?: Prisma.EnumSenderTypeFieldUpdateOperationsInput | $Enums.SenderType
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  bodyHtml?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -598,6 +628,7 @@ export type TicketReplyUncheckedUpdateManyWithoutAuthorInput = {
   ticketId?: Prisma.IntFieldUpdateOperationsInput | number
   senderType?: Prisma.EnumSenderTypeFieldUpdateOperationsInput | $Enums.SenderType
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  bodyHtml?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -606,12 +637,14 @@ export type TicketReplyCreateManyTicketInput = {
   senderType: $Enums.SenderType
   authorId?: string | null
   body: string
+  bodyHtml?: string | null
   createdAt?: Date | string
 }
 
 export type TicketReplyUpdateWithoutTicketInput = {
   senderType?: Prisma.EnumSenderTypeFieldUpdateOperationsInput | $Enums.SenderType
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  bodyHtml?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   author?: Prisma.UserUpdateOneWithoutRepliesNestedInput
 }
@@ -621,6 +654,7 @@ export type TicketReplyUncheckedUpdateWithoutTicketInput = {
   senderType?: Prisma.EnumSenderTypeFieldUpdateOperationsInput | $Enums.SenderType
   authorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  bodyHtml?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -629,6 +663,7 @@ export type TicketReplyUncheckedUpdateManyWithoutTicketInput = {
   senderType?: Prisma.EnumSenderTypeFieldUpdateOperationsInput | $Enums.SenderType
   authorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   body?: Prisma.StringFieldUpdateOperationsInput | string
+  bodyHtml?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -640,6 +675,7 @@ export type TicketReplySelect<ExtArgs extends runtime.Types.Extensions.InternalA
   senderType?: boolean
   authorId?: boolean
   body?: boolean
+  bodyHtml?: boolean
   createdAt?: boolean
   ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>
   author?: boolean | Prisma.TicketReply$authorArgs<ExtArgs>
@@ -651,6 +687,7 @@ export type TicketReplySelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   senderType?: boolean
   authorId?: boolean
   body?: boolean
+  bodyHtml?: boolean
   createdAt?: boolean
   ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>
   author?: boolean | Prisma.TicketReply$authorArgs<ExtArgs>
@@ -662,6 +699,7 @@ export type TicketReplySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   senderType?: boolean
   authorId?: boolean
   body?: boolean
+  bodyHtml?: boolean
   createdAt?: boolean
   ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>
   author?: boolean | Prisma.TicketReply$authorArgs<ExtArgs>
@@ -673,10 +711,11 @@ export type TicketReplySelectScalar = {
   senderType?: boolean
   authorId?: boolean
   body?: boolean
+  bodyHtml?: boolean
   createdAt?: boolean
 }
 
-export type TicketReplyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ticketId" | "senderType" | "authorId" | "body" | "createdAt", ExtArgs["result"]["ticketReply"]>
+export type TicketReplyOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ticketId" | "senderType" | "authorId" | "body" | "bodyHtml" | "createdAt", ExtArgs["result"]["ticketReply"]>
 export type TicketReplyInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>
   author?: boolean | Prisma.TicketReply$authorArgs<ExtArgs>
@@ -702,6 +741,7 @@ export type $TicketReplyPayload<ExtArgs extends runtime.Types.Extensions.Interna
     senderType: $Enums.SenderType
     authorId: string | null
     body: string
+    bodyHtml: string | null
     createdAt: Date
   }, ExtArgs["result"]["ticketReply"]>
   composites: {}
@@ -1133,6 +1173,7 @@ export interface TicketReplyFieldRefs {
   readonly senderType: Prisma.FieldRef<"TicketReply", 'SenderType'>
   readonly authorId: Prisma.FieldRef<"TicketReply", 'String'>
   readonly body: Prisma.FieldRef<"TicketReply", 'String'>
+  readonly bodyHtml: Prisma.FieldRef<"TicketReply", 'String'>
   readonly createdAt: Prisma.FieldRef<"TicketReply", 'DateTime'>
 }
     

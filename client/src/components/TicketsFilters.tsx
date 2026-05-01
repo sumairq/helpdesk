@@ -32,12 +32,14 @@ export function TicketsFilters({ searchInput, filters, onSearchChange, onFilters
       >
         <SelectTrigger className="w-36">
           <SelectValue>
-            {{ all: "All Statuses", open: "Open", resolved: "Resolved", closed: "Closed" }[filters.status ?? "all"]}
+            {{ all: "All Statuses", new: "New", open: "Open", processing: "Processing", resolved: "Resolved", closed: "Closed" }[filters.status ?? "all"]}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Statuses</SelectItem>
+          <SelectItem value={TicketStatus.new}>New</SelectItem>
           <SelectItem value={TicketStatus.open}>Open</SelectItem>
+          <SelectItem value={TicketStatus.processing}>Processing</SelectItem>
           <SelectItem value={TicketStatus.resolved}>Resolved</SelectItem>
           <SelectItem value={TicketStatus.closed}>Closed</SelectItem>
         </SelectContent>

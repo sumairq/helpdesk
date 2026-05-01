@@ -2,9 +2,11 @@ import DOMPurify from "dompurify";
 import { TicketStatus, statusLabels, categoryLabels, type Ticket } from "@helpdesk/core";
 
 const statusStyles: Record<TicketStatus, string> = {
-  [TicketStatus.open]: "bg-green-100 text-green-800",
-  [TicketStatus.resolved]: "bg-blue-100 text-blue-800",
-  [TicketStatus.closed]: "bg-muted text-muted-foreground",
+  [TicketStatus.new]:        "bg-yellow-100 text-yellow-800",
+  [TicketStatus.open]:       "bg-green-100 text-green-800",
+  [TicketStatus.processing]: "bg-purple-100 text-purple-800",
+  [TicketStatus.resolved]:   "bg-blue-100 text-blue-800",
+  [TicketStatus.closed]:     "bg-muted text-muted-foreground",
 };
 
 interface Props {

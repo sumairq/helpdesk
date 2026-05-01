@@ -3,7 +3,7 @@ import { inboundEmailSchema, TicketStatus, SenderType } from "@helpdesk/core";
 import { prisma } from "../db.js";
 import { validate } from "../lib/validate.js";
 import { sanitizeHtml } from "../lib/sanitize.js";
-import { classifyTicket } from "../services/ai.js";
+import { boss, CLASSIFY_TICKET, AUTO_RESOLVE_TICKET, type ClassifyTicketJob, type AutoResolveTicketJob } from "../queue.js";
 
 export const webhooksRouter = Router();
 
@@ -14,7 +14,7 @@ webhooksRouter.post("/email/inbound", async (_req: Request, res: Response) => {
   const existing = await prisma.ticket.findFirst({
     where: {
       senderEmail: { equals: data.senderEmail, mode: "insensitive" },
-      status: TicketStatus.open,
+      status: { in: [TicketStatus.new, TicketStatus.open, TicketStatus.processing] },
       subject: { equals: data.subject, mode: "insensitive" },
     },
   });
@@ -42,7 +42,16 @@ webhooksRouter.post("/email/inbound", async (_req: Request, res: Response) => {
   });
   res.status(201).json({ ticket });
 
-  classifyTicket(ticket)
-    .then((category) => prisma.ticket.update({ where: { id: ticket.id }, data: { category } }))
-    .catch(() => {});
+  await boss.send(CLASSIFY_TICKET, {
+    ticketId: ticket.id,
+    subject: ticket.subject,
+    body: ticket.body,
+  } satisfies ClassifyTicketJob);
+
+  await boss.send(AUTO_RESOLVE_TICKET, {
+    ticketId: ticket.id,
+    subject: ticket.subject,
+    body: ticket.body,
+    senderName: ticket.senderName,
+  } satisfies AutoResolveTicketJob);
 });

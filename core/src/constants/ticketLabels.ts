@@ -1,9 +1,11 @@
 import { TicketStatus, TicketCategory } from "../enums.js";
 
 export const statusLabels: Record<TicketStatus, string> = {
-  [TicketStatus.open]:     "Open",
-  [TicketStatus.resolved]: "Resolved",
-  [TicketStatus.closed]:   "Closed",
+  [TicketStatus.new]:        "New",
+  [TicketStatus.open]:       "Open",
+  [TicketStatus.processing]: "Processing",
+  [TicketStatus.resolved]:   "Resolved",
+  [TicketStatus.closed]:     "Closed",
 };
 
 export const categoryLabels: Record<TicketCategory, string> = {

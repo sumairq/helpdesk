@@ -9,6 +9,7 @@ import { usersRouter } from "./routes/users.js";
 import { ticketsRouter } from "./routes/tickets.js";
 import { webhooksRouter } from "./routes/webhooks.js";
 import { requireWebhookSecret } from "./middleware/webhookSecret.js";
+import { boss, startQueue } from "./queue.js";
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 3001);
@@ -41,13 +42,22 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   res.status(status).json({ error: message });
 });
 
-app.listen(PORT, () => {
-  console.log(`server listening on http://localhost:${PORT}`);
-});
+async function boot() {
+  await startQueue();
+  app.listen(PORT, () => {
+    console.log(`server listening on http://localhost:${PORT}`);
+  });
+}
 
 const shutdown = async () => {
+  await boss.stop();
   await prisma.$disconnect();
   process.exit(0);
 };
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
+
+boot().catch((err) => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
+});

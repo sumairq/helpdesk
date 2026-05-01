@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { createTicketSchema, updateTicketSchema, createReplySchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, polishReplySchema, Role, SenderType } from "@helpdesk/core";
+import { createTicketSchema, updateTicketSchema, createReplySchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, polishReplySchema, Role, SenderType, TicketStatus } from "@helpdesk/core";
 import { type Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
 import { validate, parseIntId } from "../lib/validate.js";
@@ -18,6 +18,8 @@ ticketsRouter.get("/", async (req: Request, res: Response) => {
 
   if (filter.status) {
     where.status = filter.status;
+  } else {
+    where.status = { not: TicketStatus.processing };
   }
   if (filter.category === "uncategorised") {
     where.category = null;

@@ -28,7 +28,8 @@
     "dompurify": "^3.4.1",
     "dotenv": "^17.4.2",
     "express": "^4.21.1",
-    "jsdom": "^29.1.0"
+    "jsdom": "^29.1.0",
+    "pg-boss": "^12.18.1"
   },
   "devDependencies": {
     "@better-auth/cli": "^1.4.21",

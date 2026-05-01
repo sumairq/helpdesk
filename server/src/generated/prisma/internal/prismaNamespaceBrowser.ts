@@ -113,6 +113,7 @@ export const TicketReplyScalarFieldEnum = {
   senderType: 'senderType',
   authorId: 'authorId',
   body: 'body',
+  bodyHtml: 'bodyHtml',
   createdAt: 'createdAt'
 } as const
 

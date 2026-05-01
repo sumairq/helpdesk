@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { createTicketSchema, updateTicketSchema, createReplySchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, polishReplySchema, Role, SenderType, TicketStatus } from "@helpdesk/core";
+import { createTicketSchema, updateTicketSchema, createReplySchema, ticketSortSchema, ticketFilterSchema, ticketPaginationSchema, polishReplySchema, Role, SenderType, TicketStatus, AI_AGENT_ID } from "@helpdesk/core";
 import { type Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../db.js";
 import { validate, parseIntId } from "../lib/validate.js";
@@ -54,11 +54,36 @@ ticketsRouter.get("/", async (req: Request, res: Response) => {
 
 ticketsRouter.get("/agents", async (_req: Request, res: Response) => {
   const agents = await prisma.user.findMany({
-    where: { role: Role.AGENT, deletedAt: null },
+    where: { role: Role.AGENT, deletedAt: null, id: { not: AI_AGENT_ID } },
     select: { id: true, name: true, email: true },
     orderBy: { name: "asc" },
   });
   res.json({ agents });
+});
+
+ticketsRouter.get("/stats", async (_req: Request, res: Response) => {
+  type StatsRow = {
+    total_tickets: number;
+    open_tickets: number;
+    ai_resolved: number;
+    ai_resolved_pct: number;
+    avg_resolution_ms: number | null;
+  };
+
+  const [statsRows, dailyTickets] = await Promise.all([
+    prisma.$queryRaw<StatsRow[]>`SELECT * FROM get_ticket_stats()`,
+    prisma.$queryRaw<{ date: string; count: number }[]>`SELECT * FROM get_daily_ticket_counts()`,
+  ]);
+
+  const s = statsRows[0];
+  res.json({
+    totalTickets: s.total_tickets,
+    openTickets: s.open_tickets,
+    aiResolvedTickets: s.ai_resolved,
+    aiResolvedPercent: s.ai_resolved_pct,
+    avgResolutionMs: s.avg_resolution_ms,
+    dailyTickets,
+  });
 });
 
 ticketsRouter.get("/:id", async (req: Request, res: Response) => {

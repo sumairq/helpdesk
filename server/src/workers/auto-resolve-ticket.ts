@@ -3,6 +3,7 @@ import { TicketStatus, SenderType } from "@helpdesk/core";
 import { prisma } from "../db.js";
 import { tryAutoResolve } from "../services/ai.js";
 import { boss } from "../queue.js";
+import { AI_AGENT_ID } from "@helpdesk/core";
 
 export const AUTO_RESOLVE_TICKET = "auto-resolve-ticket";
 
@@ -21,7 +22,7 @@ export async function registerAutoResolveTicketWorker(): Promise<void> {
 
       await prisma.ticket.update({
         where: { id: ticketId },
-        data: { status: TicketStatus.processing },
+        data: { status: TicketStatus.processing, assignedToId: AI_AGENT_ID },
       });
 
       let resolved = false;
@@ -45,7 +46,7 @@ export async function registerAutoResolveTicketWorker(): Promise<void> {
       } else {
         await prisma.ticket.update({
           where: { id: ticketId },
-          data: { status: TicketStatus.open },
+          data: { status: TicketStatus.open, assignedToId: null },
         });
       }
     }

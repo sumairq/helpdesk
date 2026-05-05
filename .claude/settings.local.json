@@ -54,7 +54,9 @@
       "Bash(curl -s -X POST 'http://localhost:3001/api/webhooks/email/inbound?token=dev-webhook-secret' -H 'Content-Type: application/json' -d '{ *)",
       "Bash(python -m json.tool)",
       "Bash(curl *)",
-      "Bash(npx shadcn@latest add select)"
+      "Bash(npx shadcn@latest add select)",
+      "PowerShell(taskkill *)",
+      "PowerShell(Get-Process *)"
     ]
   }
 }
